@@ -318,22 +318,6 @@ class CarlaClient(object):
         else:
             control.reverse = False
 
-        #print("acc:", control.throttle)
-
-        # elapsed = time.time() - self.start_time
-        # if elapsed > 5:
-        #     self.start_time = time.time()
-        #     if self.move is False:
-        #         control.throttle = 0.5
-        #         self.move = True
-        #     else:
-        #         control.throttle = 0.0
-        #         self.move = False
-        #
-        # print("elapsed:", elapsed)
-        # print("throttle:", control.throttle)
-        # print("")
-
         car.apply_control(control)
 
         return False
@@ -363,15 +347,16 @@ class CarlaClient(object):
         # Parameters
         physics_control.torque_curve = [carla.Vector2D(x=0, y=400), carla.Vector2D(x=1300, y=600)]
         physics_control.max_rpm = 10000
-        physics_control.moi = 0.1  # Default 1.0
+        physics_control.moi = 1.0
         physics_control.damping_rate_full_throttle = 0.0
         physics_control.use_gear_autobox = True
-        physics_control.gear_switch_time = 0.0
-        physics_control.clutch_strength = 1
-        physics_control.mass = 10000  # Default 10000
-        physics_control.drag_coefficient = 0.
+        physics_control.gear_switch_time = 0.5
+        physics_control.clutch_strength = 10
+        physics_control.mass = 10000
+        physics_control.drag_coefficient = 0.25
         physics_control.steering_curve = [carla.Vector2D(x=0, y=1), carla.Vector2D(x=100, y=1),
                                           carla.Vector2D(x=300, y=1)]
+        physics_control.use_sweep_wheel_collision = True
         physics_control.wheels = wheels
 
         # Update params
