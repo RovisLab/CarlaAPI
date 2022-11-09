@@ -242,7 +242,7 @@ class CarlaClient(object):
             # State measurement server
             self.state_meas_server = StateMeasurementServer(ip=ip_rovis,
                                                             port=port_rovis_state_measurement,
-                                                            dt=0.02,
+                                                            dt=0.00,
                                                             car=self.car,
                                                             imu=self.imu_sensor,
                                                             client_name=self.name)
