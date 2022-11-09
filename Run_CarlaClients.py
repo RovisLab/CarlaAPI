@@ -3,6 +3,7 @@ import sys
 import glob
 import threading
 import subprocess
+import psutil
 import time
 from CarlaClient import CarlaClient
 from CarlaClientPygame import CarlaClientPygame
@@ -20,12 +21,22 @@ except IndexError:
 import carla
 
 
+def check_carla_simulator_running_state():
+    for p in psutil.process_iter():
+        if "carla" in p.name().lower():
+            return True
+    return False
+
+
 def start_carla(carla_exe):
-    if not CarlaClient.check_carla_simulator_running_state():
+    if not check_carla_simulator_running_state():
         print(" # Carla simulator starting...")
-        subprocess.Popen([carla_exe, "-windowed", "-ResX=640", "-ResY=480", "-fps=30", "-quality-level=Medium"],
-                         start_new_session=True)
-        while not CarlaClient.check_carla_simulator_running_state():
+        try:
+            subprocess.Popen([carla_exe, "-windowed", "-ResX=640", "-ResY=480", "-fps=30", "-quality-level=Medium"],
+                             start_new_session=True)
+        except FileNotFoundError:
+            print(" # Carla executable path is invalid.")
+        while not check_carla_simulator_running_state():
             time.sleep(0.001)
         print(" # Carla started. Please run the script again.")
         exit()
@@ -36,7 +47,7 @@ def start_carla(carla_exe):
 if __name__ == "__main__":
     start_carla(carla_exe=CARLA_EXE_PATH)
 
-    if not CarlaClient.check_carla_simulator_running_state():
+    if not check_carla_simulator_running_state():
         print(' # Carla simulator could not be reached. Exiting..')
         exit()
 

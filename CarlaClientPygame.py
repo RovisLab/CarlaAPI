@@ -5,7 +5,6 @@ import time
 import threading
 import random
 import numpy as np
-import psutil
 import time
 
 from clients.VehicleActuatorClient import VehicleActuatorClient
@@ -275,13 +274,6 @@ class CarlaClientPygame(object):
 
         print(' # ClientPygame successfully terminated.')
 
-    @staticmethod
-    def check_carla_simulator_running_state():
-        for p in psutil.process_iter():
-            if "carla" in p.name().lower():
-                return True
-        return False
-
     def print_available_maps(self):
         print([elem.split('/')[-1] for elem in self.client.get_available_maps()])
 
@@ -410,7 +402,6 @@ class CarlaClientPygame(object):
         if keys[K_ESCAPE] or keys[K_q]:
             self.terminate()
             return True
-
 
 
 if __name__ == '__main__':

@@ -37,3 +37,9 @@ If you want to populate the simulation with pedestrians and vehicles, run in par
 To run using the Pygame control, modify line 42 of "Run_CarlaClients.py" from CarlaClient to CarlaClientPygame. 
 In this way, you can write for the control param: 'manual'.
 
+## Possible errors:
+
+#### `ModuleNotFoundError: No module named 'carla'` 
+
+.egg file invalid or not found
+
