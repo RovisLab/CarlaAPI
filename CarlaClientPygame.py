@@ -5,9 +5,7 @@ import time
 import threading
 import random
 import numpy as np
-import psutil
-import subprocess
-import weakref
+import time
 
 from clients.VehicleActuatorClient import VehicleActuatorClient
 from servers.MonoCameraServer import MonoCameraServer, MonoCameraSensor
@@ -117,7 +115,7 @@ class CarlaClientPygame(object):
             spawn_point = carla.Transform(position, orientation)
 
         # Instantiate car
-        bp = self.world.get_blueprint_library().filter('vehicle.Seat.Leon')[0]
+        bp = self.world.get_blueprint_library().filter(vehicle_type)[0]
         self.car = self.world.spawn_actor(bp, spawn_point)
         if self.car is None:
             print('CarlaPygame - Could not spawn the car. Exiting..')
@@ -194,7 +192,8 @@ class CarlaClientPygame(object):
 
         # Attach Depth sensor
         if port_rovis_depth is not None:
-            self.depth_sensor = DepthSensor(name='CarlaPygame - RGBD Front', parent_actor=self.car)
+            self.depth_sensor = DepthSensor(name='CarlaPygame - RGBD Front',
+                                            parent_actor=self.car)
             self.depth_sensor.setup_depth(get_transform('depth'))
             # self.depth_sensor.init_view()
 
@@ -206,7 +205,8 @@ class CarlaClientPygame(object):
 
         # Attach Lidar sensor
         if port_rovis_lidar is not None:
-            self.lidar_sensor = LidarSensor(name='CarlaPygame - LidarTop', parent_actor=self.car)
+            self.lidar_sensor = LidarSensor(name='CarlaPygame - LidarTop',
+                                            parent_actor=self.car)
             self.lidar_sensor.setup_lidar(get_transform('lidar'))
             # self.lidar_sensor.init_view()
 
@@ -218,7 +218,8 @@ class CarlaClientPygame(object):
 
         # Attach Radar sensor
         if port_rovis_radar is not None:
-            self.radar_sensor = RadarSensor(name='CarlaPygame - RadarFront', parent_actor=self.car)
+            self.radar_sensor = RadarSensor(name='CarlaPygame - RadarFront',
+                                            parent_actor=self.car)
             self.radar_sensor.setup_radar(get_transform('radar'))
             # self.radar_sensor.init_view()
 
@@ -230,7 +231,8 @@ class CarlaClientPygame(object):
 
         # Attach IMU sensor
         if port_rovis_imu is not None:
-            self.imu_sensor = IMUSensor(name='CarlaPygame - IMU', parent_actor=self.car)
+            self.imu_sensor = IMUSensor(name='CarlaPygame - IMU',
+                                        parent_actor=self.car)
             self.imu_sensor.setup_imu()
             # self.imu_sensor.init_view()
 
@@ -244,15 +246,17 @@ class CarlaClientPygame(object):
         if port_rovis_state_measurement is not None:
             # Attach IMU sensor if not created
             if port_rovis_imu is None:
-                self.imu_sensor = IMUSensor(name='IMU_state_measurement', parent_actor=self.car)
+                self.imu_sensor = IMUSensor(name='IMU_state_measurement',
+                                            parent_actor=self.car)
                 self.imu_sensor.setup_imu()
 
             # State measurement server
             self.state_meas_server = StateMeasurementServer(ip=ip_rovis,
                                                             port=port_rovis_state_measurement,
+                                                            dt=0.00,
                                                             car=self.car,
-                                                            dt=0.0,
-                                                            imu=self.imu_sensor)
+                                                            imu=self.imu_sensor,
+                                                            client_name='CarlaPygame')
             self.state_meas_server.init_server()
 
         print(' # ClientPygame initialised successfully.')
@@ -269,13 +273,6 @@ class CarlaClientPygame(object):
         self.back_cam_server.is_terminated = True
 
         print(' # ClientPygame successfully terminated.')
-
-    @staticmethod
-    def check_carla_simulator_running_state():
-        for p in psutil.process_iter():
-            if "carla" in p.name().lower():
-                return True
-        return False
 
     def print_available_maps(self):
         print([elem.split('/')[-1] for elem in self.client.get_available_maps()])
@@ -407,5 +404,5 @@ class CarlaClientPygame(object):
             return True
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     print('NOT runnable. Check \'Run_CarlaClients.py\'')

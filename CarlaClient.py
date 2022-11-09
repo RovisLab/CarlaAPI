@@ -5,7 +5,6 @@ import time
 import threading
 import random
 import numpy as np
-import psutil
 import time
 
 from clients.VehicleActuatorClient import VehicleActuatorClient
@@ -242,7 +241,7 @@ class CarlaClient(object):
             # State measurement server
             self.state_meas_server = StateMeasurementServer(ip=ip_rovis,
                                                             port=port_rovis_state_measurement,
-                                                            dt=0.02,
+                                                            dt=0.00,
                                                             car=self.car,
                                                             imu=self.imu_sensor,
                                                             client_name=self.name)
@@ -262,13 +261,6 @@ class CarlaClient(object):
         self.back_cam_server.is_terminated = True
 
         print(' # {} successfully terminated.'.format(self.name))
-
-    @staticmethod
-    def check_carla_simulator_running_state():
-        for p in psutil.process_iter():
-            if "carla" in p.name().lower():
-                return True
-        return False
 
     def print_available_maps(self):
         print([elem.split('/')[-1] for elem in self.client.get_available_maps()])
