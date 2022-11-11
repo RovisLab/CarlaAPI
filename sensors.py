@@ -28,12 +28,22 @@ def get_transform(sensor_type):
         return carla.Transform(carla.Location(x=1.8, z=1.2), carla.Rotation())
     elif sensor_type in ['back', 'rear', 'r', 'b']:
         return carla.Transform(carla.Location(x=-2.1, z=1.3), carla.Rotation(yaw=180))
+    elif sensor_type in ['front_left']:
+        return carla.Transform(carla.Location(x=1, y=-0.6, z=1.2), carla.Rotation(yaw=-60))
+    elif sensor_type in ['front_right']:
+        return carla.Transform(carla.Location(x=1, y=0.6,  z=1.2), carla.Rotation(yaw=60))
+    elif sensor_type in ['back_left']:
+        return carla.Transform(carla.Location(x=-1.8, y=-0.6, z=1.3), carla.Rotation(yaw=-120))
+    elif sensor_type in ['back_right']:
+        return carla.Transform(carla.Location(x=-1.8, y=0.6, z=1.3), carla.Rotation(yaw=120))
     elif sensor_type in ['eagle', 'bird', 'e']:
         return carla.Transform(carla.Location(z=30), carla.Rotation(pitch=-90))
     elif sensor_type in ['wheel', 'w']:
         return carla.Transform(carla.Location(x=-0.8, y=-1.1, z=0.5), carla.Rotation())
     elif sensor_type in ['driver', 'd']:
         return carla.Transform(carla.Location(x=0.7, y=-0.38, z=1.25), carla.Rotation())
+    elif sensor_type in ['above']:
+        return carla.Transform(carla.Location(z=7.5), carla.Rotation(pitch=-90))
     elif sensor_type in ['default']:
         return carla.Transform(carla.Location(x=-5.5, z=2.8), carla.Rotation(pitch=-15))
 

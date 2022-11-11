@@ -64,12 +64,16 @@ if __name__ == "__main__":
                          port_carla=2000,       # Carla port
 
                          ip_rovis='127.0.0.1',
-                         port_rovis_actuator=2003,            # 2003
-                         port_rovis_camera_front=2004,        # 2004
-                         port_rovis_camera_back=None,         # 2005
-                         port_rovis_semseg_camera=None,       # 2006
-                         port_rovis_state_measurement=2010,   # 2010
-                         port_rovis_imu=None,                 # 2011
+                         port_rovis_actuator=None,            # 2003
+                         port_rovis_cam_front=2004,           # 2004
+                         port_rovis_cam_back=2005,            # 2005
+                         port_rovis_cam_left=2006,            # 2006
+                         port_rovis_cam_right=2007,           # 2007
+                         port_rovis_cam_back_left=2008,       # 2008
+                         port_rovis_cam_back_right=2009,      # 2009
+                         port_rovis_semseg_front=None,        # 2010
+                         port_rovis_state_measurement=None,   # 2011
+                         port_rovis_imu=None,                 # 2012
                          port_rovis_depth=None,               # 2020
                          port_rovis_lidar=None,               # 2021
                          port_rovis_radar=None,               # 2022
