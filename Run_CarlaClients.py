@@ -65,11 +65,15 @@ if __name__ == "__main__":
 
                          ip_rovis='127.0.0.1',
                          port_rovis_actuator=2003,            # 2003
-                         port_rovis_camera_front=2004,        # 2004
-                         port_rovis_camera_back=2005,         # 2005
-                         port_rovis_semseg_camera=2006,       # 2006
-                         port_rovis_state_measurement=2010,   # 2010
-                         port_rovis_imu=2011,                 # 2011
+                         port_rovis_cam_front=2004,           # 2004
+                         port_rovis_cam_back=2005,            # 2005
+                         port_rovis_cam_left=2006,            # 2006
+                         port_rovis_cam_right=2007,           # 2007
+                         port_rovis_cam_back_left=2008,       # 2008
+                         port_rovis_cam_back_right=2009,      # 2009
+                         port_rovis_semseg_front=None,        # 2010
+                         port_rovis_state_measurement=2011,   # 2011
+                         port_rovis_imu=2012,                 # 2012
                          port_rovis_depth=None,               # 2020
                          port_rovis_lidar=None,               # 2021
                          port_rovis_radar=None,               # 2022
@@ -79,34 +83,7 @@ if __name__ == "__main__":
                          view_height=480,
                          view_fov=90)
 
-    car_02 = CarlaClient(name='Client Two',
-                           view_cam=True,
-                           position=carla.Location(-73, 103, 1),
-                           orientation=carla.Rotation(0, -89, 0),
-                           random_spawn=False,
-                           vehicle_type='vehicle.tesla.model3',
-                           control='auto',
-
-                           ip_carla='127.0.0.1',
-                           port_carla=2000,
-
-                           ip_rovis='127.0.0.1',
-                           port_rovis_actuator=None,            # 2103
-                           port_rovis_camera_front=2104,        # 2104
-                           port_rovis_camera_back=2105,         # 2105
-                           port_rovis_semseg_camera=None,       # 2106
-                           port_rovis_state_measurement=2110,   # 2110
-                           port_rovis_imu=None,                 # 2111
-                           port_rovis_depth=None,               # 2120
-                           port_rovis_lidar=None,               # 2121
-                           port_rovis_radar=None,               # 2122
-
-                           target_fps=30,
-                           view_width=640,
-                           view_height=480,
-                           view_fov=90)
-
-    car_02 = CarlaClient(name='Car One',  # Name of the client
+    car_02 = CarlaClient(name='Car Two',  # Name of the client
                          view_cam=True,  # View car from eagle view
                          position=carla.Location(-77.3, 64.4, 1),
                          orientation=carla.Rotation(0, -90, 0),
@@ -119,15 +96,19 @@ if __name__ == "__main__":
                          port_carla=2000,  # Carla port
 
                          ip_rovis='127.0.0.1',
-                         port_rovis_actuator=2103,  # 2103
-                         port_rovis_camera_front=2104,  # 2104
-                         port_rovis_camera_back=2105,  # 2105
-                         port_rovis_semseg_camera=2106,  # 2106
-                         port_rovis_state_measurement=2110,  # 2110
-                         port_rovis_imu=2111,  # 2111
-                         port_rovis_depth=None,  # 2120
-                         port_rovis_lidar=None,  # 2121
-                         port_rovis_radar=None,  # 2122
+                         port_rovis_actuator=2103,
+                         port_rovis_cam_front=2104,
+                         port_rovis_cam_back=2105,
+                         port_rovis_cam_left=2106,
+                         port_rovis_cam_right=2107,
+                         port_rovis_cam_back_left=2108,
+                         port_rovis_cam_back_right=2109,
+                         port_rovis_semseg_front=None,
+                         port_rovis_state_measurement=2111,
+                         port_rovis_imu=2112,
+                         port_rovis_depth=None,
+                         port_rovis_lidar=None,
+                         port_rovis_radar=None,
 
                          target_fps=30,
                          view_width=640,
