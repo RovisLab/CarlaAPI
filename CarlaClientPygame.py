@@ -66,6 +66,11 @@ class CarlaClientPygame(object):
                  port_rovis_cam_back_left=None,
                  port_rovis_cam_back_right=None,
                  port_rovis_semseg_front=None,
+                 port_rovis_semseg_back=None,
+                 port_rovis_semseg_left=None,
+                 port_rovis_semseg_right=None,
+                 port_rovis_semseg_back_left=None,
+                 port_rovis_semseg_back_right=None,
                  port_rovis_state_measurement=None,
                  port_rovis_imu=None,
                  port_rovis_depth=None,
@@ -254,6 +259,81 @@ class CarlaClientPygame(object):
                                                           cam_sensor=self.semseg_front_sensor)
             self.semseg_front_server.init_server()
 
+        if port_rovis_semseg_back is not None:
+            self.semseg_back_sensor = SemSegCameraSensor('CarlaPygame - SemSegBack',
+                                                         self.car,
+                                                         self.view_width,
+                                                         self.view_height,
+                                                         self.view_fov)
+            self.semseg_back_sensor.setup_camera(get_transform('back'))
+            # self.semseg_back_sensor.init_view()
+
+            self.semseg_back_server = SemSegCameraServer(ip=ip_rovis,
+                                                         port=port_rovis_semseg_back,
+                                                         dt=0.0,
+                                                         cam_sensor=self.semseg_back_sensor)
+            self.semseg_back_server.init_server()
+
+        if port_rovis_semseg_left is not None:
+            self.semseg_left_sensor = SemSegCameraSensor('CarlaPygame - SemSegLeft',
+                                                         self.car,
+                                                         self.view_width,
+                                                         self.view_height,
+                                                         self.view_fov)
+            self.semseg_left_sensor.setup_camera(get_transform('front_left'))
+            # self.semseg_left_sensor.init_view()
+
+            self.semseg_left_server = SemSegCameraServer(ip=ip_rovis,
+                                                         port=port_rovis_semseg_left,
+                                                         dt=0.0,
+                                                         cam_sensor=self.semseg_left_sensor)
+            self.semseg_left_server.init_server()
+
+        if port_rovis_semseg_right is not None:
+            self.semseg_right_sensor = SemSegCameraSensor('CarlaPygame - SemSegRight',
+                                                          self.car,
+                                                          self.view_width,
+                                                          self.view_height,
+                                                          self.view_fov)
+            self.semseg_right_sensor.setup_camera(get_transform('front_right'))
+            # self.semseg_right_sensor.init_view()
+
+            self.semseg_right_server = SemSegCameraServer(ip=ip_rovis,
+                                                          port=port_rovis_semseg_right,
+                                                          dt=0.0,
+                                                          cam_sensor=self.semseg_right_sensor)
+            self.semseg_right_server.init_server()
+
+        if port_rovis_semseg_back_left is not None:
+            self.semseg_back_left_sensor = SemSegCameraSensor('CarlaPygame - SemSegBackLeft',
+                                                              self.car,
+                                                              self.view_width,
+                                                              self.view_height,
+                                                              self.view_fov)
+            self.semseg_back_left_sensor.setup_camera(get_transform('back_left'))
+            # self.semseg_back_left_sensor.init_view()
+
+            self.semseg_back_left_server = SemSegCameraServer(ip=ip_rovis,
+                                                              port=port_rovis_semseg_back_left,
+                                                              dt=0.0,
+                                                              cam_sensor=self.semseg_back_left_sensor)
+            self.semseg_back_left_server.init_server()
+
+        if port_rovis_semseg_back_right is not None:
+            self.semseg_back_right_sensor = SemSegCameraSensor('CarlaPygame - SemSegBackRight',
+                                                               self.car,
+                                                               self.view_width,
+                                                               self.view_height,
+                                                               self.view_fov)
+            self.semseg_back_right_sensor.setup_camera(get_transform('back_right'))
+            # self.semseg_back_right_sensor.init_view()
+
+            self.semseg_back_right_server = SemSegCameraServer(ip=ip_rovis,
+                                                               port=port_rovis_semseg_back_right,
+                                                               dt=0.0,
+                                                               cam_sensor=self.semseg_back_right_sensor)
+            self.semseg_back_right_server.init_server()
+
         # Attach Depth sensor
         if port_rovis_depth is not None:
             self.depth_sensor = DepthSensor(name='CarlaPygame - RGBD Front',
@@ -368,6 +448,16 @@ class CarlaClientPygame(object):
                 self.back_right_cam_sensor.capture = True
             if hasattr(self, 'semseg_front_sensor'):
                 self.semseg_front_sensor.capture = True
+            if hasattr(self, 'semseg_back_sensor'):
+                self.semseg_back_sensor.capture = True
+            if hasattr(self, 'semseg_left_sensor'):
+                self.semseg_left_sensor.capture = True
+            if hasattr(self, 'semseg_right_sensor'):
+                self.semseg_right_sensor.capture = True
+            if hasattr(self, 'semseg_back_left_sensor'):
+                self.semseg_back_left_sensor.capture = True
+            if hasattr(self, 'semseg_back_right_sensor'):
+                self.semseg_back_right_sensor.capture = True
 
             # Draw radar on the world
             # self.radar_sensor.draw_radar(self.world)
