@@ -11,7 +11,7 @@ def state_measurement_data(car, imu):
         return ""
 
     # Get IMU compass
-    imu_compass = 0.0 if imu.sensor_data is None else math.degrees(imu.sensor_data.compass)
+    imu_compass = 0.0 if imu.sensor_data is None else imu.sensor_data.compass
 
     cos_a = math.cos(math.radians(180))
     sin_a = math.sin(math.radians(180))
@@ -28,7 +28,7 @@ def state_measurement_data(car, imu):
         _string += str('%.6f' % vel) + ";"
     else:
         _string += "0;"
-    _string += str('%.6f' % math.radians(-imu_compass)) + ";"  # Get yaw angle
+    _string += str('%.6f' % -imu_compass) + ";"  # Get yaw angle
 
     return _string + "/" + "&2&1;&"
 

@@ -129,7 +129,7 @@ class CarlaClient(object):
                                            self.view_fov)
             self.camera.setup_camera(get_transform('default'))
 
-        # Init actuators
+        # Init actuators server
         if port_rovis_actuator is not None:
             self.vehicle_actuator = VehicleActuatorClient(ip=ip_rovis, port=port_rovis_actuator)
             self.vehicle_actuator.init_client()
@@ -138,7 +138,31 @@ class CarlaClient(object):
                 print('{} - In order to use Actuators, you must enable \'rovis\' control.'.format(self.name))
         elif self.control == 'rovis':
             print('{} - \'rovis\' control does not work without enabling actuators filter.'.format(self.name))
-            self.control = 'auto'
+
+        # Init IMU sensor
+        if port_rovis_imu is not None or port_rovis_state_measurement is not None:
+            self.imu_sensor = IMUSensor(name='{} - IMU'.format(self.name),
+                                        car=self.car)
+            self.imu_sensor.setup_imu()
+            # self.imu_sensor.init_view()
+
+        # Attach IMU server
+        if port_rovis_imu is not None:
+            self.imu_server = IMUServer(ip=ip_rovis,
+                                        port=port_rovis_imu,
+                                        dt=0.0,
+                                        imu_sensor=self.imu_sensor)
+            self.imu_server.init_server()
+
+        # Attach State Measurement server
+        if port_rovis_state_measurement is not None:
+            self.state_meas_server = StateMeasurementServer(ip=ip_rovis,
+                                                            port=port_rovis_state_measurement,
+                                                            dt=0.00,
+                                                            car=self.car,
+                                                            imu=self.imu_sensor,
+                                                            client_name=self.name)
+            self.state_meas_server.init_server()
 
         # Attach MonoCameras
         if port_rovis_cam_front is not None:
@@ -360,36 +384,6 @@ class CarlaClient(object):
                                             dt=0.0,
                                             radar_sensor=self.radar_sensor)
             self.radar_server.init_server()
-
-        # Attach IMU sensor
-        if port_rovis_imu is not None:
-            self.imu_sensor = IMUSensor(name='{} - IMU'.format(self.name),
-                                        parent_actor=self.car)
-            self.imu_sensor.setup_imu()
-            # self.imu_sensor.init_view()
-
-            self.imu_server = IMUServer(ip=ip_rovis,
-                                        port=port_rovis_imu,
-                                        dt=0.0,
-                                        imu_sensor=self.imu_sensor)
-            self.imu_server.init_server()
-
-        # Attach State measurement sensor
-        if port_rovis_state_measurement is not None:
-            # Attach IMU sensor if not created
-            if port_rovis_imu is None:
-                self.imu_sensor = IMUSensor(name='IMU_state_measurement',
-                                            parent_actor=self.car)
-                self.imu_sensor.setup_imu()
-
-            # State measurement server
-            self.state_meas_server = StateMeasurementServer(ip=ip_rovis,
-                                                            port=port_rovis_state_measurement,
-                                                            dt=0.00,
-                                                            car=self.car,
-                                                            imu=self.imu_sensor,
-                                                            client_name=self.name)
-            self.state_meas_server.init_server()
 
         print(' # {} initialised successfully.'.format(self.name))
 

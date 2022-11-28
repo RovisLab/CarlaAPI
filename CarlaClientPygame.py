@@ -376,7 +376,7 @@ class CarlaClientPygame(object):
         # Attach IMU sensor
         if port_rovis_imu is not None:
             self.imu_sensor = IMUSensor(name='CarlaPygame - IMU',
-                                        parent_actor=self.car)
+                                        car=self.car)
             self.imu_sensor.setup_imu()
             # self.imu_sensor.init_view()
 
@@ -391,7 +391,7 @@ class CarlaClientPygame(object):
             # Attach IMU sensor if not created
             if port_rovis_imu is None:
                 self.imu_sensor = IMUSensor(name='IMU_state_measurement',
-                                            parent_actor=self.car)
+                                            car=self.car)
                 self.imu_sensor.setup_imu()
 
             # State measurement server

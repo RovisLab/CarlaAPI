@@ -36,18 +36,18 @@ import carla
 
 
 class IMUSensor(object):
-    def __init__(self, name, parent_actor):
+    def __init__(self, name, car):
         self.name = name
-        self._parent = parent_actor
+        self.car = car
         self.sensor = None
         self.sensor_data = None
 
     def setup_imu(self):
-        world = self._parent.get_world()
+        world = self.car.get_world()
         imu_bp = world.get_blueprint_library().find('sensor.other.imu')
 
         self.sensor = world.spawn_actor(
-            imu_bp, get_transform('null'), attach_to=self._parent
+            imu_bp, get_transform('null'), attach_to=self.car
         )
         weak_self = weakref.ref(self)
         self.sensor.listen(
@@ -59,13 +59,18 @@ class IMUSensor(object):
             limits = (-99.9, 99.9)
 
             data = [
-                max(limits[0], min(limits[1], self.sensor_data.accelerometer.x)),  # Accelerometer X
-                max(limits[0], min(limits[1], self.sensor_data.accelerometer.y)),  # Accelerometer Y
-                max(limits[0], min(limits[1], self.sensor_data.accelerometer.z)),  # Accelerometer Z
-                max(limits[0], min(limits[1], math.degrees(self.sensor_data.gyroscope.x))),  # Gyroscope X
-                max(limits[0], min(limits[1], math.degrees(self.sensor_data.gyroscope.y))),  # Gyroscope Y
-                max(limits[0], min(limits[1], math.degrees(self.sensor_data.gyroscope.z))),  # Gyroscope Z
-                math.degrees(self.sensor_data.compass)  # Compass - degrees
+                max(limits[0], min(limits[1], self.sensor_data.accelerometer.x)),   # Accelerometer X
+                max(limits[0], min(limits[1], self.sensor_data.accelerometer.y)),   # Accelerometer Y
+                max(limits[0], min(limits[1], self.sensor_data.accelerometer.z)),   # Accelerometer Z
+                max(limits[0], min(limits[1], math.degrees(self.sensor_data.gyroscope.x))),     # Gyroscope X
+                max(limits[0], min(limits[1], math.degrees(self.sensor_data.gyroscope.y))),     # Gyroscope Y
+                max(limits[0], min(limits[1], math.degrees(self.sensor_data.gyroscope.z))),     # Gyroscope Z
+                math.cos(self.sensor_data.compass),     # Magnetometer X
+                math.sin(self.sensor_data.compass),     # Magnetometer Y
+                0.0,                                    # Magnetometer Z
+                0.0,                        # Roll (X)
+                0.0,                        # Pitch (Y)
+                -self.sensor_data.compass   # Yaw (Z)
             ]
 
             return data
@@ -130,17 +135,14 @@ class IMUServer(object):
         while not self.is_terminated:
             if self.imu_sensor is not None:
                 data = self.imu_sensor.process_sensor_data()
-                # data = [accX, accY, accZ, gyroX, gyroY, gyroZ, compass]
+                # data = [accX, accY, accZ, gyroX, gyroY, gyroZ, magnetX, magnetY, magnetZ, pitch, yaw, roll]
 
                 if data is not None:
                     # View IMU
                     # print('\nIMU data:')
                     # print('  - Accelerometer xyz: {}'.format(data[0:3]))
                     # print('  - Gyroscope xyz: {}'.format(data[3:6]))
-                    # print('  - Compass: {}'.format(data[6]))
-
-                    # data_to_send = [accX, accY, accZ, gyroX, gyroY, gyroZ, compass, pitch=0, yaw=0, roll=0]
-                    data += [0, 0, 0]  # Adding null rotations
+                    # print('  - Magnetometer xyz: {}'.format(data[6:9]))
 
                     string_data = ""
                     for val in data:
