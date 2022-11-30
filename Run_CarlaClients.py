@@ -57,7 +57,7 @@ if __name__ == "__main__":
                          orientation=carla.Rotation(0, -90, 0),
                          random_spawn=False,  # Get a random spawn point or spawn at the position above
                          vehicle_type='vehicle.Seat.Leon',  # Vehicle type
-                         control='rovis',  # auto / rovis
+                         control='auto',  # auto / rovis
                          town_name='Town03',  # Change the map if needed
 
                          ip_carla='127.0.0.1',  # Loopback ip for Carla

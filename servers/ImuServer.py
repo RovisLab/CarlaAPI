@@ -135,7 +135,7 @@ class IMUServer(object):
         while not self.is_terminated:
             if self.imu_sensor is not None:
                 data = self.imu_sensor.process_sensor_data()
-                # data = [accX, accY, accZ, gyroX, gyroY, gyroZ, magnetX, magnetY, magnetZ, pitch, yaw, roll]
+                # data = [accX, accY, accZ, gyroX, gyroY, gyroZ, magnetX, magnetY, magnetZ, roll, pitch, yaw]
 
                 if data is not None:
                     # View IMU
