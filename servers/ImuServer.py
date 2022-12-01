@@ -18,6 +18,7 @@ import base64
 import weakref
 import os
 from sensors import get_transform
+from scipy.spatial.transform import Rotation
 
 """
 Documentation:
@@ -58,6 +59,8 @@ class IMUSensor(object):
         if self.sensor_data is not None:
             limits = (-99.9, 99.9)
 
+            quat = Rotation.from_euler('xyz', [0.0, 0.0, -self.sensor_data.compass], degrees=False)
+
             data = [
                 max(limits[0], min(limits[1], self.sensor_data.accelerometer.x)),   # Accelerometer X
                 max(limits[0], min(limits[1], self.sensor_data.accelerometer.y)),   # Accelerometer Y
@@ -68,9 +71,10 @@ class IMUSensor(object):
                 math.cos(self.sensor_data.compass),     # Magnetometer X
                 math.sin(self.sensor_data.compass),     # Magnetometer Y
                 0.0,                                    # Magnetometer Z
-                0.0,                        # Roll (X)
-                0.0,                        # Pitch (Y)
-                -self.sensor_data.compass   # Yaw (Z)
+                quat[0],    # x
+                quat[1],    # y
+                quat[2],    # z
+                quat[3]     # w
             ]
 
             return data
