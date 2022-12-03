@@ -59,7 +59,15 @@ class IMUSensor(object):
         if self.sensor_data is not None:
             limits = (-99.9, 99.9)
 
-            quat = Rotation.from_euler('xyz', [0.0, 0.0, -self.sensor_data.compass], degrees=False)
+            # Convert [0, 360] heading to [-180, 180] degrees
+            heading = self.sensor_data.compass
+            if heading > math.pi:
+                heading = heading - 2. * math.pi
+
+            heading = -heading
+
+            rot = Rotation.from_euler('xyz', [0.0, 0.0, heading], degrees=False)
+            quat = rot.as_quat()
 
             data = [
                 max(limits[0], min(limits[1], self.sensor_data.accelerometer.x)),   # Accelerometer X

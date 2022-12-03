@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
                          ip_rovis='127.0.0.1',
                          port_rovis_actuator=2003,            # 2003
-                         port_rovis_cam_front=None,           # 2004
+                         port_rovis_cam_front=2004,           # 2004
                          port_rovis_cam_back=None,            # 2005
                          port_rovis_cam_left=None,            # 2006
                          port_rovis_cam_right=None,           # 2007
