@@ -54,7 +54,7 @@ if __name__ == "__main__":
     car_01 = CarlaClient(name='Car One',  # Name of the client
                          view_cam=True,  # View car from eagle view
                          position=carla.Location(-77.3, 74.4, 1),
-                         orientation=carla.Rotation(0, -90, 0),
+                         orientation=carla.Rotation(0, 0, 0),
                          random_spawn=False,  # Get a random spawn point or spawn at the position above
                          vehicle_type='vehicle.Seat.Leon',  # Vehicle type
                          control='auto',  # auto / rovis

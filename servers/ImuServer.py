@@ -17,6 +17,9 @@ import cv2
 import base64
 import weakref
 import os
+
+from numpy import vectorize
+
 from sensors import get_transform
 from scipy.spatial.transform import Rotation
 
@@ -61,10 +64,10 @@ class IMUSensor(object):
 
             # Convert [0, 360] heading to [-180, 180] degrees
             heading = self.sensor_data.compass
-            if heading > math.pi:
-                heading = heading - 2. * math.pi
+            #if heading > math.pi:
+            #    heading = heading - 2. * math.pi
 
-            heading = -heading
+            # heading = -heading
 
             rot = Rotation.from_euler('xyz', [0.0, 0.0, heading], degrees=False)
             quat = rot.as_quat()
@@ -84,6 +87,23 @@ class IMUSensor(object):
                 quat[2],    # z
                 quat[3]     # w
             ]
+
+            # Debug
+            cos_a = math.cos(math.radians(180))
+            sin_a = math.sin(math.radians(180))
+            R = np.array([[cos_a, -sin_a, 0], [sin_a, cos_a, 0], [0, 0, 1]])
+
+            position = np.array([self.car.get_location().x, self.car.get_location().y, self.car.get_location().z])
+            velocity = self.car.get_velocity()
+
+            rot = R @ position
+            speed = math.sqrt(velocity.x ** 2 + velocity.y ** 2 + velocity.z ** 2)
+
+            # print("pose:", self.car.get_location(), math.degrees(heading))
+            # print("heading:", math.degrees(heading))
+            # print("velocity:", velocity)
+            # print("speed: {:.3f}".format(speed))
+            # print("")
 
             return data
         return None

@@ -10,31 +10,35 @@ def state_measurement_data(car, imu):
     if not car.is_alive:
         return ""
 
-    # Get IMU compass
-    heading = 0.0 if imu.sensor_data is None else imu.sensor_data.compass
+    # Get IMU compass (Carla coord sys)
+    # N (-Y axis):  0
+    # E (X axis):   90
+    # S (Y axis):   180
+    # W (-x axis):  270
 
-    # Convert [0, 360] heading to [-180, 180] degrees
-    if heading > math.pi:
-        heading = heading - 2. * math.pi
+    heading_carla = 0.0 if imu.sensor_data is None else imu.sensor_data.compass
 
-    heading = -heading
+    # Rovis heading wrt W (0 is East)
+    heading_rovis = math.pi / 2 - heading_carla
 
-    cos_a = math.cos(math.radians(180))
-    sin_a = math.sin(math.radians(180))
-    R = np.array([[cos_a, -sin_a, 0], [sin_a, cos_a, 0], [0, 0, 1]])
-    rot = R @ np.array([car.get_location().x, car.get_location().y, car.get_location().z])
+    if heading_rovis < -math.pi:
+        heading_rovis = 2 * math.pi + heading_rovis
+
+    # Convert position to rovis coord sys
+    R = np.array([[1, 0, 0], [0, -1, 0], [0, 0, 1]])
+    position = R @ np.array([car.get_location().x, car.get_location().y, car.get_location().z])
+    velocity = R @ np.array([car.get_velocity().x, car.get_velocity().y, car.get_velocity().z])
+    speed = math.sqrt(velocity[0] ** 2 + velocity[1] ** 2 + velocity[2] ** 2)
 
     _string = ""
-    _string += str('%0.4f' % rot[1]) + ";"  # Get x
-    _string += str('%0.4f' % rot[0]) + ";"  # Get y
-
-    v = car.get_velocity()
-    vel = math.sqrt(v.x**2 + v.y**2 + v.z**2)
-    if vel != 0:  # Get velocity
-        _string += str('%.6f' % vel) + ";"
+    _string += str('%0.4f' % position[0]) + ";"  # Get x
+    _string += str('%0.4f' % position[1]) + ";"  # Get y
+    if speed != 0:
+        _string += str('%.6f' % speed) + ";"
     else:
         _string += "0;"
-    _string += str('%.6f' % heading) + ";"  # Get yaw angle
+
+    _string += str('%.6f' % heading_rovis) + ";"  # Get yaw angle
 
     return _string + "/" + "&2&1;&"
 
