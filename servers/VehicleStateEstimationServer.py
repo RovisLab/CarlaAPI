@@ -1,3 +1,7 @@
+"""
+vehicle state = [x position, y position, speed, heading, steering angle]
+"""
+
 import enet
 import time
 import threading
@@ -39,6 +43,7 @@ def state_measurement_data(car, imu):
         _string += "0;"
 
     _string += str('%.6f' % heading_rovis) + ";"  # Get yaw angle
+    _string += str('%.6f' % 0) + ";"  # TODO: Steering angle
 
     return _string + "/" + "&2&1;&"
 
