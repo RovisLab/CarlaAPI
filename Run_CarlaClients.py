@@ -8,11 +8,11 @@ import time
 from CarlaClient import CarlaClient
 from CarlaClientPygame import CarlaClientPygame
 
-CARLA_EXE_PATH = "C:/dev/tools/CARLA_0.9.12/WindowsNoEditor/CarlaUE4.exe"
+CARLA_EXE_PATH = "C:/dev/tools/CARLA_0.9.13/WindowsNoEditor/CarlaUE4.exe"
 
 # Importing Carla
 try:
-    sys.path.append(glob.glob('carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob('dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
         sys.version_info.minor,
         'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])

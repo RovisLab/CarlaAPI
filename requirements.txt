@@ -1,0 +1,7 @@
+numpy
+opencv-python
+psutil
+absl-py
+pyenet
+scipy
+pygame
