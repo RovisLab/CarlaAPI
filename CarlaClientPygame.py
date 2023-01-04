@@ -543,10 +543,10 @@ class CarlaClientPygame(object):
             return True
         control = car.get_control()
 
-        control.throttle = self.vehicle_actuator.acceleration
+        control.throttle = self.vehicle_actuator.throttle
         control.steer = -self.vehicle_actuator.steering
 
-        if self.vehicle_actuator.acceleration < 0:
+        if self.vehicle_actuator.throttle < 0:
             control.reverse = True
         else:
             control.reverse = False

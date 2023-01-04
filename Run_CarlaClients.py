@@ -5,7 +5,7 @@ import threading
 import subprocess
 import psutil
 import time
-from CarlaClient import CarlaClient
+from CarlaClient import CarlaClient, port_carla, ip_carla
 from CarlaClientPygame import CarlaClientPygame
 
 CARLA_EXE_PATH = "C:/dev/tools/CARLA_0.9.13/WindowsNoEditor/CarlaUE4.exe"
@@ -20,13 +20,11 @@ except IndexError:
     pass
 import carla
 
-
 def check_carla_simulator_running_state():
     for p in psutil.process_iter():
         if "carla" in p.name().lower():
             return True
     return False
-
 
 def start_carla(carla_exe):
     if not check_carla_simulator_running_state():
@@ -43,9 +41,21 @@ def start_carla(carla_exe):
     else:
         print(" # Carla simulator ready.\n")
 
+def load_map(town_name):
+    print('Loading the {} map.'.format(town_name))
+    client = carla.Client(ip_carla, port_carla)
+    if town_name in [elem.split('/')[-1] for elem in client.get_available_maps()]:
+        client.set_timeout(999)
+        client.load_world(town_name)
+    else:
+        print('The map {} is invalid or not existing. Exiting...'.format(town_name))
+    print('Map loaded')
 
 if __name__ == "__main__":
     start_carla(carla_exe=CARLA_EXE_PATH)
+
+    # Load map
+    load_map('Town03')
 
     if not check_carla_simulator_running_state():
         print(' # Carla simulator could not be reached. Exiting..')
@@ -54,15 +64,10 @@ if __name__ == "__main__":
     car_01 = CarlaClient(name='Car One',  # Name of the client
                          view_cam=True,  # View car from eagle view
                          position=carla.Location(-77.3, 74.4, 1),
-                         orientation=carla.Rotation(0, 0, 0),
+                         orientation=carla.Rotation(0, -90, 0),
                          random_spawn=False,  # Get a random spawn point or spawn at the position above
                          vehicle_type='vehicle.Seat.Leon',  # Vehicle type
                          control='rovis',  # auto / rovis
-                         town_name='Town03',  # Change the map if needed
-
-                         ip_carla='127.0.0.1',  # Loopback ip for Carla
-                         port_carla=2000,       # Carla port
-
                          ip_rovis='127.0.0.1',
                          port_rovis_actuator=2003,            # 2003
                          port_rovis_cam_front=2004,           # 2004
@@ -78,11 +83,10 @@ if __name__ == "__main__":
                          port_rovis_semseg_back_left=None,    # 2014
                          port_rovis_semseg_back_right=None,   # 2015
                          port_rovis_state_measurement=2016,   # 2016
-                         port_rovis_imu=2017,                 # 2017
+                         port_rovis_imu=None,                 # 2017
                          port_rovis_depth=None,               # 2020
                          port_rovis_lidar=None,               # 2021
                          port_rovis_radar=None,               # 2022
-
                          target_fps=30,
                          view_width=640,
                          view_height=480,
@@ -95,10 +99,6 @@ if __name__ == "__main__":
     #                      random_spawn=False,  # Get a random spawn point or spawn at the position above
     #                      vehicle_type='vehicle.tesla.model3',  # Vehicle type
     #                      control='rovis',  # auto / rovis
-    #
-    #                      ip_carla='127.0.0.1',  # Loopback ip for Carla
-    #                      port_carla=2000,  # Carla port
-    #
     #                      ip_rovis='127.0.0.1',
     #                      port_rovis_actuator=2103,
     #                      port_rovis_cam_front=2104,
@@ -118,7 +118,6 @@ if __name__ == "__main__":
     #                      port_rovis_depth=None,
     #                      port_rovis_lidar=None,
     #                      port_rovis_radar=None,
-    #
     #                      target_fps=30,
     #                      view_width=640,
     #                      view_height=480,

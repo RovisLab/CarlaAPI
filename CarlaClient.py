@@ -27,6 +27,9 @@ except IndexError:
     pass
 import carla
 
+ip_carla = "127.0.0.1"  # Loopback ip for Carla
+port_carla = 2000       # Carla port
+
 
 class CarlaClient(object):
     def __init__(self, name,
@@ -35,11 +38,7 @@ class CarlaClient(object):
                  orientation=carla.Rotation(0, -89, 0),
                  random_spawn=False,
                  vehicle_type='vehicle.Seat.Leon',
-                 town_name='Town03',
                  control='auto',  # auto rovis
-                 ip_carla='127.0.0.1',
-                 port_carla=2000,
-
                  ip_rovis='127.0.0.1',
                  port_rovis_actuator=None,
                  port_rovis_cam_front=None,
@@ -59,7 +58,6 @@ class CarlaClient(object):
                  port_rovis_depth=None,
                  port_rovis_lidar=None,
                  port_rovis_radar=None,
-
                  target_fps=30,
                  view_width=940,
                  view_height=480,
@@ -84,23 +82,13 @@ class CarlaClient(object):
 
         self.past_steering = 0.
 
-        # Check map
-        if self.world.get_map().name != town_name:
-            if town_name in [elem.split('/')[-1] for elem in self.client.get_available_maps()]:
-                self.client.set_timeout(999)
-                self.world = self.client.load_world(town_name)
-                self.client.set_timeout(2.0)
-                print('{} - Loaded the {} map.'.format(self.name, town_name))
-            else:
-                print('{} - The map {} is invalid or not existing. Exiting...'.format(self.name, town_name))
-        self.map = self.world.get_map()
-
         # Flag for actor termination
         self.is_terminated = False
 
         # Get spawn point
         if random_spawn:
-            spawn_points = self.map.get_spawn_points()
+            map = self.world.get_map()
+            spawn_points = map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points \
                 else carla.Transform()
         else:
@@ -466,10 +454,10 @@ class CarlaClient(object):
     def rovis_control(self, car):
         control = car.get_control()
 
-        control.throttle = self.vehicle_actuator.acceleration
+        control.throttle = self.vehicle_actuator.throttle
         control.steer = -self.vehicle_actuator.steering
 
-        if self.vehicle_actuator.acceleration < 0:
+        if self.vehicle_actuator.throttle < 0:
             control.reverse = True
         else:
             control.reverse = False

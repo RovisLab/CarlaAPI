@@ -18,7 +18,7 @@ class VehicleActuatorClient(object):
         self.port = port
         self.host = None
         self.event = None
-        self.acceleration = 0
+        self.throttle = 0
         self.steering = 0
         self.is_terminated = False
 
@@ -50,7 +50,7 @@ class VehicleActuatorClient(object):
                 self.decode()
 
             else:
-                self.acceleration = 0
+                self.throttle = 0
                 self.steering = 0
 
             self.host.flush()
@@ -58,7 +58,7 @@ class VehicleActuatorClient(object):
 
     def decode(self):
         msg = self.event.packet.data.decode("utf-8")
-        self.acceleration = float((msg.split('\"acc\":')[1]).split(',')[0])
+        self.throttle = float((msg.split('\"acc\":')[1]).split(',')[0])
         self.steering = float((msg.split('\"delta\":')[1]).split('}')[0])
 
     def do_service_once(self):
@@ -73,6 +73,7 @@ class VehicleActuatorClient(object):
 
         elif self.event.type == enet.EVENT_TYPE_DISCONNECT:
             print("%s: VehicleActuatorClient DISCONNECT" % self.event.peer.address)
+            self.throttle = 0
 
         elif self.event.type == enet.EVENT_TYPE_RECEIVE:
             self.decode()
@@ -88,7 +89,7 @@ def tu_VehicleActuatorClient(_argv):
 
     while True:
         time.sleep(0.002)
-        print(vehicle_actuator.acceleration, vehicle_actuator.steering)
+        print(vehicle_actuator.throttle, vehicle_actuator.steering)
 
 if __name__ == '__main__':
     try:
