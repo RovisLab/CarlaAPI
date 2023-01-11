@@ -15,6 +15,7 @@ from servers.ImuServer import IMUServer, IMUSensor
 from servers.DepthServer import DepthSensor, DepthServer
 from servers.LidarServer import LidarSensor, LidarServer
 from servers.RadarServer import RadarSensor, RadarServer
+from CarlaClient import ip_carla, port_carla
 from sensors import *
 
 try:
@@ -52,10 +53,7 @@ class CarlaClientPygame(object):
                  orientation=carla.Rotation(0, -89, 0),
                  random_spawn=False,
                  vehicle_type='vehicle.Seat.Leon',
-                 town_name='Town03',
                  control='auto',  # auto manual rovis
-                 ip_carla='127.0.0.1',
-                 port_carla=2000,
 
                  ip_rovis='127.0.0.1',
                  port_rovis_actuator=None,
@@ -98,17 +96,6 @@ class CarlaClientPygame(object):
 
         self.past_steering = 0.
 
-        # Check map
-        if self.world.get_map().name != town_name:
-            if town_name in [elem.split('/')[-1] for elem in self.client.get_available_maps()]:
-                self.client.set_timeout(999)
-                self.world = self.client.load_world(town_name)
-                self.client.set_timeout(2.0)
-                print('{} - Loaded the {} map.'.format(self.name, town_name))
-            else:
-                print('{} - The map {} is invalid or not existing. Exiting...'.format(self.name, town_name))
-        self.map = self.world.get_map()
-
         # Flag to update PyGame image
         self.capture = True
 
@@ -117,7 +104,8 @@ class CarlaClientPygame(object):
 
         # Get spawn point
         if random_spawn:
-            spawn_points = self.map.get_spawn_points()
+            map = self.world.get_map()
+            spawn_points = map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points \
                 else carla.Transform()
         else:

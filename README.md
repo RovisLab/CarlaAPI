@@ -28,7 +28,7 @@ Carla is executed by running the "Run_CarlaClients.py" script.
 
 If you want to populate the simulation with pedestrians and vehicles, run in parallel "spawn_npc.py".
 
-To run using the Pygame control, modify line 42 of "Run_CarlaClients.py" from CarlaClient to CarlaClientPygame. 
+To run using the Pygame control, in the "Run_CarlaClients.py" script, create a vehicle using CarlaClientPygame instead of CarlaClient. 
 In this way, you can write for the control param: 'manual'.
 
 ## Possible errors:

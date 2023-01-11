@@ -20,11 +20,13 @@ except IndexError:
     pass
 import carla
 
+
 def check_carla_simulator_running_state():
     for p in psutil.process_iter():
         if "carla" in p.name().lower():
             return True
     return False
+
 
 def start_carla(carla_exe):
     if not check_carla_simulator_running_state():
@@ -41,6 +43,7 @@ def start_carla(carla_exe):
     else:
         print(" # Carla simulator ready.\n")
 
+
 def load_map(town_name):
     print('Loading the {} map.'.format(town_name))
     client = carla.Client(ip_carla, port_carla)
@@ -50,6 +53,7 @@ def load_map(town_name):
     else:
         print('The map {} is invalid or not existing. Exiting...'.format(town_name))
     print('Map loaded')
+
 
 if __name__ == "__main__":
     start_carla(carla_exe=CARLA_EXE_PATH)
