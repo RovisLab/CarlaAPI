@@ -21,12 +21,20 @@ class VehicleActuatorClient(object):
         self.throttle = 0
         self.steering = 0
         self.is_terminated = False
+        self.ts_decode = 0
 
     def init_client(self):
         self.host = enet.Host(enet.Address(self.ip, self.port), 32, 1, 0, 0)
         #self.event = self.host.service(1000)
         threading.Thread(target=self.do_service, daemon=True).start()
-        #threading.Thread(target=self.event_handler, daemon=True).start()
+        threading.Thread(target=self.check_enet_isalive, daemon=True).start()
+
+    def check_enet_isalive(self):
+        while not self.is_terminated:
+            ts = time.time()
+            if (ts - self.ts_decode) > 0.3:
+                self.throttle = 0
+                self.steering = 0
 
     def do_service(self):
         while not self.is_terminated:
@@ -60,6 +68,7 @@ class VehicleActuatorClient(object):
         msg = self.event.packet.data.decode("utf-8")
         self.throttle = float((msg.split('\"acc\":')[1]).split(',')[0])
         self.steering = float((msg.split('\"delta\":')[1]).split('}')[0])
+        self.ts_decode = time.time()
 
     def do_service_once(self):
         try:
