@@ -1,0 +1,350 @@
+{
+    "version": 1.0,
+    "date": "23.06.2021",
+    "RovisDataTypes": [
+        {
+            "name": "ROVIS_UNDEFINED",
+            "value": -1
+        },
+        {
+            "name": "ROVIS_RAW_DATA_STREAM",
+            "value": 0
+        },
+        {
+            "name": "ROVIS_VECTOR_INT",
+            "value": 1
+        },
+        {
+            "name": "ROVIS_VECTOR_FLOAT",
+            "value": 2
+        },
+        {
+            "name": "ROVIS_VECTOR_DOUBLE",
+            "value": 3
+        },
+        {
+            "name": "ROVIS_IMAGE",
+            "value": 4
+        },
+        {
+            "name": "ROVIS_RADAR",
+            "value": 5
+        },
+        {
+            "name": "ROVIS_ULTRASONICS",
+            "value": 6
+        },
+        {
+            "name": "ROVIS_IMU",
+            "value": 7
+        },
+        {
+            "name": "ROVIS_GPS",
+            "value": 8
+        },
+        {
+            "name": "ROVIS_POINTS",
+            "value": 9
+        },
+        {
+            "name": "ROVIS_VOXELS",
+            "value": 10
+        },
+        {
+            "name": "ROVIS_POSES_6D",
+            "value": 11
+        },
+        {
+            "name": "ROVIS_2D_ROIS",
+            "value": 12
+        },
+        {
+            "name": "ROVIS_3D_BBOXES",
+            "value": 13
+        },
+        {
+            "name": "ROVIS_POINT_FEATURES",
+            "value": 14
+        },
+        {
+            "name": "ROVIS_OCTREE",
+            "value": 15
+        },
+        {
+            "name": "ROVIS_GRIDMAP",
+            "value": 16
+        },
+        {
+            "name": "ROVIS_LANES_MODEL",
+            "value": 17
+        },
+        {
+            "name": "ROVIS_DNN_OUTPUT",
+            "value": 18
+        },
+        {
+            "name": "ROVIS_REFERENCE_SETPOINTS",
+            "value": 19
+        },
+        {
+            "name": "ROVIS_STATE",
+            "value": 20
+        },
+        {
+            "name": "ROVIS_CONTROL_INPUT",
+            "value": 21
+        },
+        {
+            "name": "ROVIS_MEASUREMENT",
+            "value": 22
+        },
+        {
+            "name": "ROVIS_SLAM",
+            "value": 23
+        },
+        {
+            "name": "ROVIS_ESTIMATED_TRAJECTORY",
+            "value": 24
+        },
+        {
+            "name": "ROVIS_ROAD_ROIS",
+            "value": 100
+        }
+    ],
+    "RovisFilterTypes": [
+        {
+            "name": "ROVIS_UNDEFINED_FILTER_TYPE",
+            "value": -1
+        },
+        {
+            "name": "ROVIS_IMAGE_READER_FILTER_TYPE",
+            "value": 0
+        },
+        {
+            "name": "ROVIS_MONO_CAMERA_FILTER_TYPE",
+            "value": 1
+        },
+        {
+            "name": "ROVIS_RGBDCAMERA_FILTER_TYPE",
+            "value": 2
+        },
+        {
+            "name": "ROVIS_BUMBLEBEE_CAMERA_FILTER_TYPE",
+            "value": 3
+        },
+        {
+            "name": "ROVIS_GPS_FILTER_TYPE",
+            "value": 4
+        },
+        {
+            "name": "ROVIS_IMU_FILTER_TYPE",
+            "value": 5
+        },
+        {
+            "name": "ROVIS_RADAR_FILTER_TYPE",
+            "value": 6
+        },
+        {
+            "name": "ROVIS_LIDAR_FILTER_TYPE",
+            "value": 7
+        },
+        {
+            "name": "ROVIS_ULTRASONICS_FILTER_TYPE",
+            "value": 8
+        },
+        {
+            "name": "ROVIS_TARAXL_FILTER_TYPE",
+            "value": 9
+        },
+        {
+            "name": "ROVIS_GRASSHOPPER_FILTER_TYPE",
+            "value": 10
+        },
+        {
+            "name": "ROVIS_QUADCAM_FILTER_TYPE",
+            "value": 11
+        },
+        {
+            "name": "ROVIS_ROTARY_ENCODER_FILTER_TYPE",
+            "value": 36
+        },
+        {
+            "name": "ROVIS_DNN_ROAD_DRIVING_FILTER_TYPE",
+            "value": 12
+        },
+        {
+            "name": "ROVIS_DNN_DETECTRON2_FILTER_TYPE",
+            "value": 43
+        },
+        {
+            "name": "ROVIS_DNN_ONNX_FILTER_TYPE",
+            "value": 48
+        },
+        {
+            "name": "ROVIS_ARUCO_LOCALIZATION_FILTER_TYPE",
+            "value": 14
+        },
+        {
+            "name": "ROVIS_VISUAL_SLAM_FILTER_TYPE",
+            "value": 15
+        },
+        {
+            "name": "ROVIS_SVO_TRACKER_DATA_FILTER_TYPE",
+            "value": 16
+        },
+        {
+            "name": "ROVIS_BINARY_SEGMENTATION_FILTER_TYPE",
+            "value": 17
+        },
+        {
+            "name": "ROVIS_ARUCO_DETECTION_FILTER_TYPE",
+            "value": 20
+        },
+        {
+            "name": "ROVIS_POINTS_TRACKER_FILTER_TYPE",
+            "value": 35
+        },
+        {
+            "name": "ROVIS_OBJECT_DETECTOR_2D_FILTER_TYPE",
+            "value": 18
+        },
+        {
+            "name": "ROVIS_OBJECT_DETECTOR_3D_FILTER_TYPE",
+            "value": 37
+        },
+        {
+            "name": "ROVIS_OBJECT_TRACKER_FILTER_TYPE",
+            "value": 19
+        },
+        {
+            "name": "ROVIS_LANE_DETECTION_FILTER_TYPE",
+            "value": 23
+        },
+        {
+            "name": "ROVIS_SEMANTIC_SEGMENTATION_FILTER_TYPE",
+            "value": 24
+        },
+        {
+            "name": "ROVIS_SENSOR_FUSION_MODEL_FILTER_TYPE",
+            "value": 22
+        },
+        {
+            "name": "ROVIS_MAP_FILTER_TYPE",
+            "value": 47
+        },
+        {
+            "name": "ROVIS_VEHICLE_MISSION_PLANNER_FILTER_TYPE",
+            "value": 25
+        },
+        {
+            "name": "ROVIS_VEHICLE_LOCAL_PLANNER_FILTER_TYPE",
+            "value": 26
+        },
+        {
+            "name": "ROVIS_VEHICLE_UNSTUCK_FILTER_TYPE",
+            "value": 38
+        },
+        {
+            "name": "ROVIS_DRONE_WAYPOINTS_PLANNER_FILTER_TYPE",
+            "value": 41
+        },
+        {
+            "name": "ROVIS_VEHICLE_SIMULATION_FILTER_TYPE",
+            "value": 29
+        },
+        {
+            "name": "ROVIS_VEHICLE_CONTROL_FILTER_TYPE",
+            "value": 27
+        },
+        {
+            "name": "ROVIS_VEHICLE_CONTROL_DIFF_FILTER_TYPE",
+            "value": 44
+        },
+        {
+            "name": "ROVIS_VEHICLE_STATE_ESTIMATION_FILTER_TYPE",
+            "value": 13
+        },
+        {
+            "name": "ROVIS_DRONE_SIMULATION_FILTER_TYPE",
+            "value": 39
+        },
+        {
+            "name": "ROVIS_DRONE_CONTROL_FILTER_TYPE",
+            "value": 28
+        },
+        {
+            "name": "ROVIS_DRONE_STATE_ESTIMATION_FILTER_TYPE",
+            "value": 40
+        },
+        {
+            "name": "ROVIS_ARM_SIMULATION_FILTER_TYPE",
+            "value": 50
+        },
+        {
+            "name": "ROVIS_ARM_CONTROL_FILTER_TYPE",
+            "value": 51
+        },
+        {
+            "name": "ROVIS_ARM_STATE_ESTIMATION_FILTER_TYPE",
+            "value": 52
+        },
+        {
+            "name": "ROVIS_INERTIAL_ODOMETRY_FILTER_TYPE",
+            "value": 53
+        },
+        {
+            "name": "ROVIS_TERMINAL_VEHICLE_FILTER_TYPE",
+            "value": 58
+        },
+        {
+            "name": "ROVIS_COMPASS_FILTER_TYPE",
+            "value": 60
+        },
+        {
+            "name": "ROVIS_VEHICLE_ACTUATOR_FILTER_TYPE",
+            "value": 30
+        },
+        {
+            "name": "ROVIS_DRONE_ACTUATOR_FILTER_TYPE",
+            "value": 42
+        },
+        {
+            "name": "ROVIS_ARM_ACTUATOR_FILTER_TYPE",
+            "value": 49
+        },
+        {
+            "name": "ROVIS_VIZ_SENSING_FILTER_TYPE",
+            "value": 45
+        },
+        {
+            "name": "ROVIS_VIZ_VEHICLE_FILTER_TYPE",
+            "value": 46
+        },
+        {
+            "name": "ROVIS_ROS_IMAGE_FILTER_TYPE",
+            "value": 31
+        },
+        {
+            "name": "ROVIS_ROS_SYNC_IMAGES_FILTER_TYPE",
+            "value": 32
+        },
+        {
+            "name": "ROVIS_OBJECT_ESTIMATION_FILTER_TYPE",
+            "value": 33
+        },
+        {
+            "name": "ROVIS_ULTRASONIC_PREDICTION_FILTER_TYPE",
+            "value": 34
+        },
+        {
+            "name": "ROVIS_OBJECT_DETECTOR_ROAD_FILTER_TYPE",
+            "value": 101
+        }
+    ],
+    "HistoryDatabases": [
+        "D:/Proiect_Disertatie/RovisDojo/data/fake_dataset",
+        "D:/Proiect_Disertatie/datasets/dataset_carlas",
+        "D:/Proiect_Disertatie/datasets/dataset_nuscenes",
+        "D:/datasets/culine_train"
+    ]
+}
