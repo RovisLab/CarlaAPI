@@ -38,7 +38,7 @@ from depend.RovisDatabaseFormat import RovisDataBase
 
 
 def main():
-    client = CarlaSaveData(db_path=r'C:\dev\Databases\Carla\SemSegBig')
+    client = CarlaSaveData(db_path=r'C:\data\Carla\SemSegBig2')
     try:
         threading.Thread(target=client.game_loop).start()
         time.sleep(2)
@@ -59,7 +59,7 @@ class CarlaSaveData(object):
         self.sampling_time = 5.0  # dt
         self.target_fps = 30
         self.target_freq = 1.0 / self.target_fps
-        self.view_width = 940
+        self.view_width = 640
         self.view_height = 480
         self.view_fov = 90
         self.client = carla.Client('127.0.0.1', 2000)
@@ -93,6 +93,8 @@ class CarlaSaveData(object):
             spawn_point = random.choice(spawn_points) if spawn_points \
                 else carla.Transform()
         else:
+            position = carla.Location(-77.3, 54.4, 1),
+            orientation = carla.Rotation(0, -90, 0),
             spawn_point = carla.Transform(position, orientation)
 
         # Instantiate car
@@ -255,17 +257,17 @@ class CarlaSaveData(object):
 
         data = {
             'datastream_1': {  # image
-                'name': '{}.jpg'.format(ts_stop), 'image': rgb_images[0]},
+                'name': '{}.png'.format(ts_stop), 'image': rgb_images[0]},
             'datastream_2': {  # image
-                'name': '{}.jpg'.format(ts_stop), 'image': rgb_images[1]},
+                'name': '{}.png'.format(ts_stop), 'image': rgb_images[1]},
             'datastream_3': {  # image
-                'name': '{}.jpg'.format(ts_stop), 'image': rgb_images[2]},
+                'name': '{}.png'.format(ts_stop), 'image': rgb_images[2]},
             'datastream_4': {  # image
-                'name': '{}.jpg'.format(ts_stop), 'image': rgb_images[3]},
+                'name': '{}.png'.format(ts_stop), 'image': rgb_images[3]},
             'datastream_5': {  # image
-                'name': '{}.jpg'.format(ts_stop), 'image': rgb_images[4]},
+                'name': '{}.png'.format(ts_stop), 'image': rgb_images[4]},
             'datastream_6': {  # image
-                'name': '{}.jpg'.format(ts_stop), 'image': rgb_images[5]},
+                'name': '{}.png'.format(ts_stop), 'image': rgb_images[5]},
 
             'datastream_7': {  # sem_seg
                 'name': '{}.png'.format(ts_stop), 'semantic': semseg_images[0]},

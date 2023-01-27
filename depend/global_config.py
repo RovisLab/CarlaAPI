@@ -25,7 +25,7 @@ except:
 # ===================================
 # Set ROVIS VISION parameters
 __C.ROVIS_VISION = edict()
-__C.ROVIS_VISION.TYPES_FILE = __C.BASE.PATH + r'/RovisVision/include/ROVIS_TYPES.h'
+__C.ROVIS_VISION.TYPES_FILE = __C.BASE.PATH + r'/RovisVision/src/rovis_toolkit/src/ROVIS_TYPES.h'
 __C.ROVIS_VISION.PIPELINE_FILE = __C.BASE.PATH + r'/RovisVision/etc/pipelines/control/rovis_nuscenes_pipeline.conf'
 __C.ROVIS_VISION.DNN_MODELS_FOLDER = __C.BASE.PATH + r'/RovisVision/models/'
 __C.ROVIS_VISION.OBJECT_CLASSES_PATH = r'D:\dev\Adnotation\dataset_driving\datastream_10\classes_NuScenes_regions.conf'
