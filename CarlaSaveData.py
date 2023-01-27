@@ -255,6 +255,11 @@ class CarlaSaveData(object):
             self.bool_save = False
             return
 
+        # Simulate enet network transfer
+        for i in range(6):
+            ret, rgb_images[i] = cv2.imencode(".jpg", rgb_images[i])
+            rgb_images[i] = cv2.imdecode(rgb_images[i], -1)
+
         data = {
             'datastream_1': {  # image
                 'name': '{}.png'.format(ts_stop), 'image': rgb_images[0]},
