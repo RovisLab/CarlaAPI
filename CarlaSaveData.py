@@ -17,6 +17,8 @@ from servers.LidarServer import LidarSensor, LidarServer
 from servers.RadarServer import RadarSensor, RadarServer
 from sensors import *
 
+from Run_CarlaClients import CARLA_EXE_PATH, check_carla_simulator_running_state, start_carla
+
 # Importing Carla
 try:
     sys.path.append(glob.glob('dist/carla-*%d.%d-%s.egg' % (
@@ -28,7 +30,7 @@ except IndexError:
 import carla
 
 '''
-    For this to work, add to the <root>/depend folder, the following from RovisDojo:L
+    For this to work, add to the <root>/depend folder, the following from RovisDojo:
  - RovisDatabaseFormat.py
  - types_ROVIS_TYPES.py
  - global_config.py
@@ -38,7 +40,9 @@ from depend.RovisDatabaseFormat import RovisDataBase
 
 
 def main():
-    client = CarlaSaveData(db_path=r'C:\data\Carla\SemSegBig2')
+    # start_carla(CARLA_EXE_PATH)
+
+    client = CarlaSaveData(db_path=r'C:\dev\Databases\Carla\SemSegBig2')
     try:
         threading.Thread(target=client.game_loop).start()
         time.sleep(2)
@@ -59,8 +63,8 @@ class CarlaSaveData(object):
         self.sampling_time = 5.0  # dt
         self.target_fps = 30
         self.target_freq = 1.0 / self.target_fps
-        self.view_width = 640
-        self.view_height = 480
+        self.view_width = 800
+        self.view_height = 600
         self.view_fov = 90
         self.client = carla.Client('127.0.0.1', 2000)
         self.client.set_timeout(2.0)
@@ -69,7 +73,8 @@ class CarlaSaveData(object):
         self.using_carla_ai = False
         self.bool_save = False
         self.db_path = db_path
-        self.count_saved_data = 1000  # Set to -1 to save endlessly
+        self.data_counter_lim = 1000  # Set to -1 to save endlessly
+        self.data_counter = 0
         self.db = None
 
         # Check map
@@ -223,10 +228,9 @@ class CarlaSaveData(object):
             self.world.tick()
 
             # Capture flag for cameras. Without this, the image will not update
-            for cam in self.m_cams.values():
-                cam.capture = True
-            for semseg_cam in self.semseg.values():
-                semseg_cam.capture = True
+            for key in self.cam_order:
+                self.m_cams[key].capture = True
+                self.semseg[key].capture = True
 
             # Save data
             if self.bool_save:
@@ -256,9 +260,9 @@ class CarlaSaveData(object):
             return
 
         # Simulate enet network transfer
-        for i in range(6):
-            ret, rgb_images[i] = cv2.imencode(".jpg", rgb_images[i])
-            rgb_images[i] = cv2.imdecode(rgb_images[i], -1)
+        # for i in range(6):
+        #     ret, rgb_images[i] = cv2.imencode(".jpg", rgb_images[i])
+        #     rgb_images[i] = cv2.imdecode(rgb_images[i], -1)
 
         data = {
             'datastream_1': {  # image
@@ -292,10 +296,15 @@ class CarlaSaveData(object):
         self.db.add_data(ts_start=ts_start, ts_stop=ts_stop, data=data)
 
         # Count
-        if self.count_saved_data != -1:
-            self.count_saved_data -= 1
-            if not self.count_saved_data:
+        self.data_counter += 1
+        if self.data_counter_lim != -1:
+            if self.data_counter % 10 == 0:
+                print(" - Saved {} out of {}.".format(self.data_counter, self.data_counter_lim))
+            if self.data_counter == self.data_counter_lim:
                 self.terminate()
+        else:
+            if self.data_counter % 10 == 0:
+                print(" - Saved {}.".format(self.data_counter))
 
         self.bool_save = False
 
