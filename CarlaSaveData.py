@@ -42,7 +42,7 @@ from depend.RovisDatabaseFormat import RovisDataBase
 def main():
     # start_carla(CARLA_EXE_PATH)
 
-    client = CarlaSaveData(db_path=r'C:\dev\Databases\Carla\SemSegBig2')
+    client = CarlaSaveData(db_path=r'C:\dev\Databases\Carla\SemSegBig')
     try:
         threading.Thread(target=client.game_loop).start()
         time.sleep(2)
@@ -71,7 +71,7 @@ class CarlaSaveData(object):
         self.world = self.client.get_world()
         self.random_spawn = True
         self.using_carla_ai = False
-        self.bool_save = False
+        self.signal_save = False
         self.db_path = db_path
         self.data_counter_lim = 1000  # Set to -1 to save endlessly
         self.data_counter = 0
@@ -207,6 +207,7 @@ class CarlaSaveData(object):
             cam.destroy()
         for semseg_cam in self.semseg.values():
             semseg_cam.destroy()
+        cv2.destroyAllWindows()
         self.is_terminated = True
 
         print(' # {} successfully terminated.'.format(self.name))
@@ -229,11 +230,12 @@ class CarlaSaveData(object):
 
             # Capture flag for cameras. Without this, the image will not update
             for key in self.cam_order:
-                self.m_cams[key].capture = True
                 self.semseg[key].capture = True
+                self.m_cams[key].capture = True
 
             # Save data
-            if self.bool_save:
+            if self.signal_save:
+                time.sleep(0.1)
                 self.save_data(ts_start, ts_stop)
                 ts_start = ts_stop
                 ts_stop += 5  # ts_stop += self.sampling_time
@@ -243,8 +245,9 @@ class CarlaSaveData(object):
 
     def timer_callback(self):
         while not self.is_terminated:
-            time.sleep(self.sampling_time)
-            self.bool_save = True
+            if not self.signal_save:
+                time.sleep(self.sampling_time)
+                self.signal_save = True
 
     def save_data(self, ts_start, ts_stop):
         # Get data
@@ -256,7 +259,7 @@ class CarlaSaveData(object):
             semseg_images.append(self.semseg[key].process_image())
 
         if any(elem is None for elem in rgb_images) or any(elem is None for elem in semseg_images):
-            self.bool_save = False
+            self.signal_save = False
             return
 
         # Simulate enet network transfer
@@ -306,7 +309,7 @@ class CarlaSaveData(object):
             if self.data_counter % 10 == 0:
                 print(" - Saved {}.".format(self.data_counter))
 
-        self.bool_save = False
+        self.signal_save = False
 
     def set_synchronous_mode(self, synchronous_mode):
         settings = self.world.get_settings()
