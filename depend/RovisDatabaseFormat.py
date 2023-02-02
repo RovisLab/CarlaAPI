@@ -374,6 +374,22 @@ class RovisDataBase:
             if not self.datastreams[key].is_created():
                 self.datastreams[key].create_stream()
 
+    def add_custom(self, filter_id, data, name):
+        if 'datastream_{}'.format(filter_id) not in self.datastreams.keys():
+            print('Datastream {} does not exist.'.format(filter_id))
+            return
+        if not self.datastreams['datastream_{}'.format(filter_id)].is_created():
+            print('Datastream {} is not created yet.'.format(filter_id))
+            return
+        save_path = self.datastreams['datastream_{}'.format(filter_id)].dir
+
+        if os.path.isfile(data):  # Copy existing file
+            copy(data, save_path + '/' + name)
+        elif type(data) == str:  # If formatted string
+            with open(save_path + '/' + name, 'w') as file:
+                file.write(data)
+
+
     def show_packing_info(self, stream_ids=()):
         if len(stream_ids) == 0:
             streams = list(sorted(self.datastreams, key=lambda dict_key: int(dict_key.split('_')[-1])))
@@ -890,7 +906,7 @@ class RovisWheelsEncoderStream(RovisDataBase.RovisStream):
     def __init__(self, db_path, filter_id, filter_name, input_sources=()):
         super().__init__(db_path, filter_id, filter_name, input_sources)
         self.filter_type = RovisFilterType.ROVIS_ROTARY_ENCODER_FILTER_TYPE
-        self.output_type = RovisDataType.ROVIS_VECTOR_INT  # To check
+        self.output_type = RovisDataType.ROVIS_VECTOR_INT  # TODO check
 
     def create_stream(self):
         # Create dir
