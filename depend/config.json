@@ -341,10 +341,5 @@
             "value": 101
         }
     ],
-    "HistoryDatabases": [
-        "D:/Proiect_Disertatie/RovisDojo/data/fake_dataset",
-        "D:/Proiect_Disertatie/datasets/dataset_carlas",
-        "D:/Proiect_Disertatie/datasets/dataset_nuscenes",
-        "D:/datasets/culine_train"
-    ]
+    "HistoryDatabases": []
 }

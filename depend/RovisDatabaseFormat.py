@@ -8,12 +8,18 @@ This script creates a Rovis type Database.
 import os
 import cv2
 import csv
+import time
 from shutil import copy
 import pandas as pd
 import numpy as np
 
 # Modified for use here
 from depend.types_ROVIS_TYPES import RovisDataType, RovisFilterType
+__all__ = [
+    'RovisDataBase',
+    'create_obj_cls_file',
+    'create_calib_file'
+]
 
 """
 Example:
@@ -30,6 +36,11 @@ def create_data_base_example():
     timestamp_start = int(time.time())
     timestamp_stop = timestamp_start
     sampling_time = 5
+    
+    # Create object classes and add it to ds 2
+    classes = [{'name': _, 'countable': True}, {_}]
+    obj_cls = create_obj_cls_file(classes)
+    db.add_custom(filter_id=2, data=obj_cls, name='object_classes.conf')
 
     for _ in _:
         image_path = 'test_image.jpg'
@@ -88,6 +99,91 @@ def str2bool(v):
     else:
         print('Boolean value expected.')
         return False
+
+
+def create_obj_cls_file(classes: list) -> str:
+    """
+    classes = [
+        {
+            'name': <name: str>,
+            'countable': <bool>
+        },
+        {...}
+    ]
+    """
+    obj_cls = 'ObjectClasses:\n{\n'
+    for idx, cls in enumerate(classes):
+        obj_cls += '    ' + cls['name']
+        obj_cls += ':\n    {\n'
+        obj_cls += '        ID = ' + str(idx) + '\n'
+        obj_cls += '        Countable = ' + ('True' if cls['countable'] else 'False')
+        obj_cls += '\n    }\n'
+        time.sleep(0.01)
+    obj_cls += '}'
+    return obj_cls
+
+
+def create_calib_file(name: str, calib: dict) -> str:
+    """
+    calib = {
+        'width': 0,  # Width of image
+        'height': 0,  # Height of image
+
+        'rx': 0,  # Rotation X
+        'ry': 0,  # Rotation Y
+        'rz': 0,  # Rotation Z
+        'tx': 0,  # Translation X
+        'ty': 0,  # Translation Y
+        'tz': 0,  # Translation Z
+
+        'ch': 0,  # Channels
+        'fx': 0,  # Focal length X
+        'fy': 0,  # Focal length Y
+        'cx': 0,  # Optical center X
+        'cy': 0,  # Optical center Y
+        'px': 0,  # Pixel size X
+        'py': 0,  # Pixel size Y
+        'dist0': 0,  # Distance coef 0
+        'dist1': 0,  # Distance coef 1
+        'dist2': 0,  # Distance coef 2
+        'dist3': 0,  # Distance coef 3
+        'dist4': 0,  # Distance coef 4
+
+        'bline': 0,  # Baseline
+    }
+    """
+
+    cal_file = '//{}\n\n'.format(name)
+    cal_file += 'image_width = {};\n'.format(calib['width'])
+    cal_file += 'image_height = {};\n\n'.format(calib['height'])
+    cal_file += 'Pose =\n{\n'
+    cal_file += '   Rotation = \n   {\n'
+    cal_file += '      x = {};\n'.format(calib['rx'])
+    cal_file += '      y = {};\n'.format(calib['ry'])
+    cal_file += '      z = {};\n'.format(calib['rz'])
+    cal_file += '   }\n'
+    cal_file += '   Translation = \n   {\n'
+    cal_file += '      x = {};\n'.format(calib['tx'])
+    cal_file += '      y = {};\n'.format(calib['ty'])
+    cal_file += '      z = {};\n'.format(calib['tz'])
+    cal_file += '   }\n\n'
+    cal_file += 'LeftSensor =\n{\n'
+    cal_file += '   channels = {};\n'.format(calib['ch'])
+    cal_file += '   focal_length_x = {};\n'.format(calib['fx'])
+    cal_file += '   focal_length_y = {};\n'.format(calib['fy'])
+    cal_file += '   optical_center_x = {};\n'.format(calib['cx'])
+    cal_file += '   optical_center_y = {};\n'.format(calib['cy'])
+    cal_file += '   pixel_size_x = {};\n'.format(calib['px'])
+    cal_file += '   pixel_size_y = {};\n'.format(calib['py'])
+    cal_file += '   dist_coeff_0 = {};\n'.format(calib['dist0'])
+    cal_file += '   dist_coeff_1 = {};\n'.format(calib['dist1'])
+    cal_file += '   dist_coeff_2 = {};\n'.format(calib['dist2'])
+    cal_file += '   dist_coeff_3 = {};\n'.format(calib['dist3'])
+    cal_file += '   dist_coeff_4 = {};\n'.format(calib['dist4'])
+    cal_file += '}\n\n'
+    cal_file += 'baseline = {};'.format(calib['bline'])
+
+    return cal_file
 
 
 class TsSync:
@@ -175,10 +271,6 @@ class RovisDataBase:
 
         def create_stream(self):
             raise NotImplementedError()
-
-        def create_calib_file(self):
-            # TODO
-            pass
 
         def add_to_stream(self, ts_start, ts_stop, data):
             raise NotImplementedError()
@@ -374,21 +466,24 @@ class RovisDataBase:
             if not self.datastreams[key].is_created():
                 self.datastreams[key].create_stream()
 
-    def add_custom(self, filter_id, data, name):
-        if 'datastream_{}'.format(filter_id) not in self.datastreams.keys():
-            print('Datastream {} does not exist.'.format(filter_id))
-            return
-        if not self.datastreams['datastream_{}'.format(filter_id)].is_created():
-            print('Datastream {} is not created yet.'.format(filter_id))
-            return
-        save_path = self.datastreams['datastream_{}'.format(filter_id)].dir
+    def add_custom(self, filter_id: int, data: any, name: str):
+        save_path = ''
+        if filter_id == 0:  # Add to database root
+            save_path = self.db_path
+        else:  # Add to a datastream folder
+            if 'datastream_{}'.format(filter_id) not in self.datastreams.keys():
+                print('Datastream {} does not exist.'.format(filter_id))
+                return
+            if not self.datastreams['datastream_{}'.format(filter_id)].is_created():
+                print('Datastream {} is not created yet.'.format(filter_id))
+                return
+            save_path = self.datastreams['datastream_{}'.format(filter_id)].dir
 
         if os.path.isfile(data):  # Copy existing file
             copy(data, save_path + '/' + name)
         elif type(data) == str:  # If formatted string
             with open(save_path + '/' + name, 'w') as file:
                 file.write(data)
-
 
     def show_packing_info(self, stream_ids=()):
         if len(stream_ids) == 0:
@@ -427,6 +522,7 @@ class RovisImageStream(RovisDataBase.RovisStream):
         mkdir(self.dir + '/samples')
         mkdir(self.dir + '/samples/0')
         mkdir(self.dir + '/samples/0/left')
+        mkdir(self.dir + '/samples/0/right')
 
         # create csv file
         with open(self.dir + '/data_descriptor.csv', 'w', newline='') as f:
@@ -438,20 +534,30 @@ class RovisImageStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ image
-            'name': str,
-            'image': array[][][] / str
+            'name': !str,
+            'image': !array[][][] / str,
+            'image_right': array[][][] / str
         """
-        # Save image
+        # Save image (left)
         image_path = 'samples/0/left' + '/' + data['name']
         if isinstance(data['image'], str):
             copy(data['image'], self.dir + '/' + image_path)
         else:
             cv2.imwrite(self.dir + '/' + image_path, data['image'])
 
+        # Save image (right)
+        right_image_path = '-1'
+        if 'image_right' in data:
+            right_image_path = 'samples/0/right' + '/' + data['name']
+            if isinstance(data['image_right'], str):
+                copy(data['image_right'], self.dir + '/' + right_image_path)
+            else:
+                cv2.imwrite(self.dir + '/' + right_image_path, data['image_right'])
+
         # Update csv
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
             writer = csv.writer(f)
-            row = [ts_start, ts_stop, ts_stop - ts_start, image_path, -1]
+            row = [ts_start, ts_stop, ts_stop - ts_start, image_path, right_image_path]
             writer.writerow(row)
 
 
@@ -476,8 +582,8 @@ class RovisLidarStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ lidar
-            'name': str,
-            'lidar_file': <lidar_type_file> / str
+            'name': !str,
+            'lidar_file': !<lidar_type_file> / str
         """
         # Save lidar file
         lidar_path = 'samples' + '/' + data['name']
@@ -521,8 +627,8 @@ class RovisRadarStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ radar
-            'name': str,
-            'radar_file': <radar_type_file>
+            'name': !str,
+            'radar_file': !<radar_type_file>
         """
         # Save radar file
         radar_path = 'samples' + '/' + data['name']
@@ -566,10 +672,10 @@ class RovisVehStateStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ veh_state
-            's_var_0': float,
-            's_var_1': float,
-            's_var_2': float,
-            's_var_3': float
+            's_var_0': !float,
+            's_var_1': !float,
+            's_var_2': !float,
+            's_var_3': !float
         """
         # Update csv
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
@@ -605,13 +711,13 @@ class Rovis2DObjDetStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ 2D_det
-            'frame_id': int,
-            'roi_id': [int],
-            'cls': [int],
-            'x': [int],
-            'y': [int],
-            'width': [int],
-            'height': [int]
+            'frame_id': !int,
+            'roi_id': ![int],
+            'cls': ![int],
+            'x': ![int],
+            'y': ![int],
+            'width': ![int],
+            'height': ![int]
         """
         # Update data_descriptor
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
@@ -654,18 +760,18 @@ class Rovis3DObjDetStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ 3D_det
-            'frame_id': int,
-            'roi_id': [int],
-            'cls': [int],
-            'x': [float],
-            'y': [float],
-            'z': [float],
-            'w': [float],
-            'h': [float],
-            'l': [float],
-            'roll': [float],
-            'pitch': [float],
-            'yaw': [float]
+            'frame_id': !int,
+            'roi_id': ![int],
+            'cls': ![int],
+            'x': ![float],
+            'y': ![float],
+            'z': ![float],
+            'w': ![float],
+            'h': ![float],
+            'l': ![float],
+            'roll': ![float],
+            'pitch': ![float],
+            'yaw': ![float]
         """
         # Update data_descriptor
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
@@ -703,15 +809,15 @@ class RovisIMUStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ imu
-            'acc_x': float,
-            'acc_y': float,
-            'acc_z': float,
-            'gyro_x': float,
-            'gyro_y': float,
-            'gyro_z': float,
-            'pitch': float,
-            'yaw': float,
-            'roll': float
+            'acc_x': !float,
+            'acc_y': !float,
+            'acc_z': !float,
+            'gyro_x': !float,
+            'gyro_y': !float,
+            'gyro_z': !float,
+            'pitch': !float,
+            'yaw': !float,
+            'roll': !float
         """
         # Update csv
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
@@ -745,7 +851,7 @@ class RovisUltrasonicStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ ultrasonics
-            'sonics': array[34 float]
+            'sonics': !array[34 float]
         """
         # Update csv
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
@@ -785,15 +891,15 @@ class RovisLaneStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ lanes
-            'name': str,
-            'semantic': array[][] / str,
-            'instances': array[][] / str,
-            'lane_id': int,
-            'points': array[],
-            'theta_0': float,
-            'theta_1': float,
-            'theta_2': float,
-            'theta_3': float
+            'name': !str,
+            'semantic': !array[][] / str,
+            'instances': !array[][] / str,
+            'lane_id': !int,
+            'points': !array[],
+            'theta_0': !float,
+            'theta_1': !float,
+            'theta_2': !float,
+            'theta_3': !float
         """
         # Save semantic image
         semantic_path = 'samples/0/left' + '/' + data['name']
@@ -854,13 +960,13 @@ class RovisSemSegStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ sem_seg
-            'name': str,
+            'name': !str,
             'semantic': array[][] / str,
             'instances': array[][] / str,
-            'shape_id': int,
-            'cls': int,
-            'instance': int,
-            'points': array[][2 float]
+            'shape_id': [int],
+            'cls': [int],
+            'instance': [int],
+            'points': array[][][2 float]
         """
         # Save semantic image
         if 'semantic' in data:
@@ -893,13 +999,15 @@ class RovisSemSegStream(RovisDataBase.RovisStream):
         if not ('shape_id' in data and 'cls' in data and 'instance' in data and 'points' in data):
             return
 
-        if not len(data['points']):
+        if not len(data['shape_id']):
             return
 
         with open(self.dir + '/framebased_data_descriptor.csv', 'a', newline='') as f:
             writer = csv.writer(f)
-            row = [ts_stop, data['shape_id'], data['cls'], data['instance'], data['points']]
-            writer.writerow(row)
+            for i in range(len(data['shape_id'])):
+                row = [ts_stop, data['shape_id'][i], data['cls'][i],
+                       data['instance'][i], data['points'][i]]
+                writer.writerow(row)
 
 
 class RovisWheelsEncoderStream(RovisDataBase.RovisStream):
@@ -922,8 +1030,8 @@ class RovisWheelsEncoderStream(RovisDataBase.RovisStream):
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ wheels_encoder
-            'data_0': int,
-            'data_1': int
+            'data_0': !int,
+            'data_1': !int
         """
         # Update csv
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:

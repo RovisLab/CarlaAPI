@@ -201,6 +201,18 @@ class CarlaSaveData(object):
         # db.show_packing_info()
         self.db.create_db()
 
+        # Add object classes file to the sem_seg datastreams
+        obj_cls_path = os.path.join(os.getcwd(), 'carla_obj_classes.conf')
+        if not os.path.isfile(obj_cls_path):
+            print(' - Object classes file has not been found. Ignoring..')
+        else:
+            self.db.add_custom(filter_id=7, data=obj_cls_path, name='object_classes.conf')
+            self.db.add_custom(filter_id=8, data=obj_cls_path, name='object_classes.conf')
+            self.db.add_custom(filter_id=9, data=obj_cls_path, name='object_classes.conf')
+            self.db.add_custom(filter_id=10, data=obj_cls_path, name='object_classes.conf')
+            self.db.add_custom(filter_id=11, data=obj_cls_path, name='object_classes.conf')
+            self.db.add_custom(filter_id=12, data=obj_cls_path, name='object_classes.conf')
+
     def terminate(self):
         self.car.destroy()
         for cam in self.m_cams.values():
