@@ -166,7 +166,7 @@ def create_calib_file(name: str, calib: dict) -> str:
     cal_file += '      x = {};\n'.format(calib['tx'])
     cal_file += '      y = {};\n'.format(calib['ty'])
     cal_file += '      z = {};\n'.format(calib['tz'])
-    cal_file += '   }\n\n'
+    cal_file += '   }\n}\n'
     cal_file += 'LeftSensor =\n{\n'
     cal_file += '   channels = {};\n'.format(calib['ch'])
     cal_file += '   focal_length_x = {};\n'.format(calib['fx'])
@@ -285,7 +285,7 @@ class RovisDataBase:
                 Parameters:
                     @param: core_id: int
                 Returns:
-                    string: input sources representaion
+                    string: input sources representation
                 Example:
                     core_id = 1
                     self.input_sources = [1, 2, 4]
@@ -433,7 +433,7 @@ class RovisDataBase:
             return
 
         stream = None
-        if filter_type in ['ROVIS_MONO_CAMERA_FILTER_TYPE', 'image', 'monocamera']:
+        if filter_type in ['ROVIS_MONO_CAMERA_FILTER_TYPE', 'image', 'camera']:
             stream = RovisImageStream(self.db_path, filter_id, filter_name)
         elif filter_type in ['ROVIS_LIDAR_FILTER_TYPE', 'lidar']:
             stream = RovisLidarStream(self.db_path, filter_id, filter_name)
@@ -441,9 +441,9 @@ class RovisDataBase:
             stream = RovisRadarStream(self.db_path, filter_id, filter_name)
         elif filter_type in ['ROVIS_VEHICLE_STATE_ESTIMATION_FILTER_TYPE', 'veh_state']:
             stream = RovisVehStateStream(self.db_path, filter_id, filter_name)
-        elif filter_type in ['ROVIS_OBJECT_DETECTOR_2D_FILTER_TYPE', '2D_obj_det']:
+        elif filter_type in ['ROVIS_OBJECT_DETECTOR_2D_FILTER_TYPE', '2D_obj_det', 'det2d']:
             stream = Rovis2DObjDetStream(self.db_path, filter_id, filter_name, input_sources)
-        elif filter_type in ['ROVIS_OBJECT_DETECTOR_3D_FILTER_TYPE', '3D_obj_det']:
+        elif filter_type in ['ROVIS_OBJECT_DETECTOR_3D_FILTER_TYPE', '3D_obj_det', 'det3d']:
             stream = Rovis3DObjDetStream(self.db_path, filter_id, filter_name, input_sources)
         elif filter_type in ['ROVIS_IMU_FILTER_TYPE', 'imu']:
             stream = RovisIMUStream(self.db_path, filter_id, filter_name)
@@ -467,7 +467,6 @@ class RovisDataBase:
                 self.datastreams[key].create_stream()
 
     def add_custom(self, filter_id: int, data: any, name: str):
-        save_path = ''
         if filter_id == 0:  # Add to database root
             save_path = self.db_path
         else:  # Add to a datastream folder
@@ -580,18 +579,34 @@ class RovisLidarStream(RovisDataBase.RovisStream):
 
         self.created = True
 
+    @staticmethod
+    def write_lidar_file(file_path, points):
+        ply_header_lidar = '''ply
+        format ascii 1.0
+        element vertex %(vert_num)d
+        property float x
+        property float y
+        property float z
+        end_header
+        '''
+        with open(file_path, 'wb') as f:
+            f.write((ply_header_lidar % dict(vert_num=len(points))).encode('utf-8'))
+            np.savetxt(f, points, fmt='%f %f %f')
+
     def add_to_stream(self, ts_start, ts_stop, data):
         """ lidar
             'name': !str,
-            'lidar_file': !<lidar_type_file> / str
+            'lidar_data': !array[][] / str
         """
         # Save lidar file
+        if not data['name'].endswith('ply'):
+            data['name'] += '.ply'
         lidar_path = 'samples' + '/' + data['name']
-        if isinstance(data['lidar_file'], str):
-            copy(data['lidar_file'], self.dir + '/' + lidar_path)
+
+        if isinstance(data['lidar_data'], str):
+            copy(data['lidar_data'], self.dir + '/' + lidar_path)
         else:
-            with open(lidar_path, "w") as f:
-                f.write(data['lidar_file'])
+            self.write_lidar_file(self.dir + '/' + lidar_path, data['lidar_data'])
 
         # Update csv
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
@@ -625,18 +640,74 @@ class RovisRadarStream(RovisDataBase.RovisStream):
 
         self.created = True
 
+    @staticmethod
+    def write_radar_file(file_path, points):
+        if len(points[0]) == 3:  # x y z
+            radar_xyz_header = '''ply
+                    format ascii 1.0
+                    element vertex %(vert_num)d
+                    property float x
+                    property float y
+                    property float z
+                    end_header
+                    '''
+            with open(file_path, 'wb') as f:
+                f.write((radar_xyz_header % dict(vert_num=len(points))).encode('utf-8'))
+                np.savetxt(f, points, fmt='%f %f %f')
+        elif len(points[0]) == 4:  # vel, altitude, azimuth, depth
+            radar_carla_header = '''ply
+                    format ascii 1.0
+                    element vertex %(vert_num)d
+                    property float vel
+                    property float altitude
+                    property float azimuth
+                    property float depth
+                    end_header
+                    '''
+            with open(file_path, 'wb') as f:
+                f.write((radar_carla_header % dict(vert_num=len(points))).encode('utf-8'))
+                np.savetxt(f, points, fmt='%f %f %f %f')
+        elif len(points[0]) == 18:  # default radar - header from nuscenes_converter
+            radar_default_header = '''ply
+                    format ascii 1.0
+                    element vertex %(vert_num)d
+                    property float x
+                    property float y
+                    property float z
+                    property int dyn_prop
+                    property int id
+                    property float rcs
+                    property float vx
+                    property float vy
+                    property float vx_comp
+                    property float vy_comp
+                    property int is_quality_valid
+                    property int ambig_state
+                    property int x_rms
+                    property int y_rms
+                    property int invalid_state
+                    property int pdh0
+                    property int vx_rms
+                    property int vy_rms
+                    end_header
+                    '''
+            with open(file_path, 'wb') as f:
+                f.write((radar_default_header % dict(vert_num=len(points))).encode('utf-8'))
+                np.savetxt(f, points, fmt='%f %f %f %d %d %f %f %f %f %f %d %d %d %d %d %d %d %d')
+
     def add_to_stream(self, ts_start, ts_stop, data):
         """ radar
             'name': !str,
-            'radar_file': !<radar_type_file>
+            'radar_data': !array[][] / str
         """
         # Save radar file
+        if not data['name'].endswith('ply'):
+            data['name'] += '.ply'
         radar_path = 'samples' + '/' + data['name']
         if isinstance(data['radar_file'], str):
             copy(data['radar_file'], self.dir + '/' + radar_path)
         else:
-            with open(radar_path, "w") as f:
-                f.write(data['radar_file'])
+            write_radar_file(self.dir + '/' + radar_path, data['radar_data'])
 
         # Update data_descriptor
         with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:

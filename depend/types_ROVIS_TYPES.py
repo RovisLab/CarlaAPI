@@ -11,7 +11,7 @@ ROVIS_DATA_TYPE_ENUM_NAME = "ROVIS_DATA_TYPE"
 
 if not os.path.exists(CFG.BASE.PATH):
     base_path = os.path.abspath(os.path.join(os.path.abspath(""), "../..", "..", ".."))
-    print("Warning: Base path found in global_config.py not found. Defaulting to ", base_path)
+    print("Warning: Base path found in config_utils.py not found. Defaulting to ", base_path)
     CFG.BASE.PATH = base_path
 
 # conf_file = os.path.join(CFG.BASE.PATH, "RovisDojo", "annotation_tool", "config.json")
