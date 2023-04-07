@@ -581,17 +581,31 @@ class RovisLidarStream(RovisDataBase.RovisStream):
 
     @staticmethod
     def write_lidar_file(file_path, points):
-        ply_header_lidar = '''ply
-        format ascii 1.0
-        element vertex %(vert_num)d
-        property float x
-        property float y
-        property float z
-        end_header
-        '''
-        with open(file_path, 'wb') as f:
-            f.write((ply_header_lidar % dict(vert_num=len(points))).encode('utf-8'))
-            np.savetxt(f, points, fmt='%f %f %f')
+        if len(points[0]) == 3:  # x y z
+            header_xyz = '''ply
+            format ascii 1.0
+            element vertex %(vert_num)d
+            property float x
+            property float y
+            property float z
+            end_header
+            '''
+            with open(file_path, 'wb') as f:
+                f.write((header_xyz % dict(vert_num=len(points))).encode('utf-8'))
+                np.savetxt(f, points, fmt='%f %f %f')
+        elif len(points[0]) == 4:  # x y z r  (r: reflectance / intensity?)
+            header_xyzr = '''ply
+            format ascii 1.0
+            element vertex %(vert_num)d
+            property float x
+            property float y
+            property float z
+            property float r
+            end_header
+            '''
+            with open(file_path, 'wb') as f:
+                f.write((header_xyzr % dict(vert_num=len(points))).encode('utf-8'))
+                np.savetxt(f, points, fmt='%f %f %f %f')
 
     def add_to_stream(self, ts_start, ts_stop, data):
         """ lidar

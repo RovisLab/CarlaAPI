@@ -113,14 +113,20 @@ class LidarSensor(BaseSensor):
 
     # ==================== Pack data for saving ====================
     def pack_data(self, ts_stop, frame_id):
-        points = self.get_data().copy()[:, :3]
+        # https://carla.readthedocs.io/en/latest/ref_sensors/#lidar-sensor
+        save_intensity = True  # Check docs
 
+        points = self.get_data().copy()
         points[:, [0, 1]] = points[:, [1, 0]]
+
+        if not save_intensity:
+            points = points[:, :3]
 
         packed_data = {
             'name': '{}'.format(ts_stop),
-            'lidar_data': points  # [[y, x, z]...]
+            'lidar_data': points  # [[y, x, z]...] or [[y, x, z, i]...]
         }
+
         return packed_data
 
     # ==================== Custom methods ====================

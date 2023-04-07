@@ -1,6 +1,6 @@
-'''
+"""
     DEPRECATED SENSORS
-'''
+"""
 
 '''
 Ultrasonic sensor implementation
