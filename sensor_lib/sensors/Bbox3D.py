@@ -305,7 +305,7 @@ class BoundingBoxesHandler(object):
         actor_rot = actor.get_transform().rotation
         parent_rot = self.parent.get_transform().rotation
 
-        rot['yaw'] = deg2rad(limit_angle(actor_rot.yaw - parent_rot.yaw))
+        rot['yaw'] = -deg2rad(limit_angle(actor_rot.yaw - parent_rot.yaw))
         rot['pitch'] = deg2rad(limit_angle(actor_rot.pitch - parent_rot.pitch))
         rot['roll'] = deg2rad(limit_angle(actor_rot.roll - parent_rot.roll))
 
@@ -370,6 +370,7 @@ class BoundingBoxesHandler(object):
     @staticmethod
     def get_matrix(transform):
         # Generate transformation matrix from transform
+        # Transformation matrix: R_yaw * -R_pitch * -R_roll * T
         rotation = transform.rotation
         location = transform.location
         c_y = np.cos(np.radians(rotation.yaw))

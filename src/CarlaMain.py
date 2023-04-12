@@ -247,7 +247,10 @@ class CarlaMain(object):
             # Add calibration file
             if filter_type in ['camera', 'lidar', 'radar']:
                 calib_dict = self.clients[cl]['client'].sensors.get(sen).generate_calib_dict()
-                calib_file = create_calib_file('{} - {}'.format(cl, sen), calib_dict)
+                if filter_type in ['lidar', 'radar']:
+                    calib_file = create_calib_file('{} - {}'.format(cl, sen), calib_dict, exclude_intrinsic=True)
+                else:
+                    calib_file = create_calib_file('{} - {}'.format(cl, sen), calib_dict, exclude_intrinsic=False)
                 self.db.add_custom(filter_id=ds_idx + 1, data=calib_file, name='calibration.cal')
 
     def add_to_database(self, ts_start, ts_stop):

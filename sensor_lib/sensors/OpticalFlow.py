@@ -24,6 +24,7 @@ import carla
 class OpticalFlowSensor(BaseSensor):
     def __init__(self, name, parent_actor, client_args):
         super().__init__(name, parent_actor, client_args)
+        self.channels = 3
         self.has_capture = True
 
     # ==================== General sensor methods ====================

@@ -44,6 +44,10 @@ class LidarSensor(BaseSensor):
                 self.pps = self.args[key]
             elif key == 'rot_freq':
                 self.rot_freq = self.args[key]
+            elif key == 'lower_fov':
+                self.lower_fov = self.args[key]
+            elif key == 'upper_fov':
+                self.upper_fov = self.args[key]
 
     def setup(self):
         world = self._parent.get_world()
@@ -117,14 +121,15 @@ class LidarSensor(BaseSensor):
         save_intensity = True  # Check docs
 
         points = self.get_data().copy()
-        points[:, [0, 1]] = points[:, [1, 0]]
+        # points[:, [0, 1]] = points[:, [1, 0]]  # x, y => y, x
+        points[:, 1] = -1 * points[:, 1]  # y => -y
 
         if not save_intensity:
             points = points[:, :3]
 
         packed_data = {
             'name': '{}'.format(ts_stop),
-            'lidar_data': points  # [[y, x, z]...] or [[y, x, z, i]...]
+            'lidar_data': points  # [[x, -y, z]...] or [[x, -y, z, i]...]
         }
 
         return packed_data

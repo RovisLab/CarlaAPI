@@ -224,7 +224,7 @@ class BaseSensor(object):
             'ty': self.sensor_transform.location.y,
             'tz': self.sensor_transform.location.z,
 
-            'ch': self.ch,
+            'ch': self.channels,
             'fx': self.calib[0][0], 'fy': self.calib[1][1],
             'cx': self.calib[0][2], 'cy': self.calib[1][2],
             'px': '4.5000001591688488e-006', 'py': '4.5000001591688488e-006',

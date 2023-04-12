@@ -17,8 +17,6 @@ import carla
 
 
 # Global vars
-VEH_NUM = 75
-PED_NUM = 60
 VEH_FILTER = 'vehicle.*'
 PED_FILTER = 'walker.pedestrian.*'
 TM_PORT = 8000  # Traffic manager port
@@ -29,6 +27,9 @@ class PopulateSim(object):
         self.sim_client = sim_client
         self.world = sim_client.get_world()
         self.traffic_manager = None
+
+        self.veh_num = conf.General['population'][0] if conf.General['population'][0] >= 0 else 100
+        self.ped_num = conf.General['population'][1] if conf.General['population'][1] >= 0 else 50
 
         self.vehicles = []
         self.walkers = []
@@ -48,7 +49,7 @@ class PopulateSim(object):
         veh_spawn_pts = self.world.get_map().get_spawn_points()
         number_of_spawn_points = len(veh_spawn_pts)
 
-        final_veh_num = VEH_NUM
+        final_veh_num = self.veh_num
         if final_veh_num < number_of_spawn_points:
             np.random.shuffle(veh_spawn_pts)
         elif args.number_of_vehicles > number_of_spawn_points:
@@ -87,7 +88,7 @@ class PopulateSim(object):
         ped_spawn_loc = []
         ped_batch = []
         ped_speed = []
-        for i in range(PED_NUM):
+        for i in range(self.ped_num):
             loc = self.world.get_random_location_from_navigation()
             tries = 20
             while loc is None or loc in ped_spawn_loc:

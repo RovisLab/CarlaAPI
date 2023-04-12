@@ -277,6 +277,7 @@ class BoundingBoxesHandler(object):
     @staticmethod
     def get_matrix(transform):
         # Generate transformation matrix from transform
+        # Transformation matrix: R_yaw * -R_pitch * -R_roll * T
         rotation = transform.rotation
         location = transform.location
         c_y = np.cos(np.radians(rotation.yaw))

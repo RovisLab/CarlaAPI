@@ -35,7 +35,7 @@ def check_config():
     general_key_type = {
         'carla_ip': str, 'carla_port': int, 'res_x': int, 'res_y': int,
         'fps': int, 'quality': str, 'rovis_ip': str, 'town': str, 'populate_sim': bool,
-        'sync_mode': bool
+        'population': tuple, 'sync_mode': bool
     }
     client_key_type = {  # Each client
         'position': tuple, 'orientation': tuple, 'random_spawn': bool,
@@ -46,7 +46,8 @@ def check_config():
         'type': str, 'pos': str, 'width': int, 'height': int,
         'fov': int, 'view': bool, 'port': int, 'send': bool,
         'gamma': int, 'range': int, 'channels': int, 'pps': int,
-        'rot_freq': int, 'h_fov': int, 'v_fov': int, 'vel_range': int
+        'rot_freq': int, 'h_fov': int, 'v_fov': int, 'vel_range': int,
+        'lower_fov': int, 'upper_fov': int
     }
     req_comm_keys = ['type', 'pos']
     db_key_type = {

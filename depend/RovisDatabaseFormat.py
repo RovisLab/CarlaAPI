@@ -123,7 +123,7 @@ def create_obj_cls_file(classes: list) -> str:
     return obj_cls
 
 
-def create_calib_file(name: str, calib: dict) -> str:
+def create_calib_file(name: str, calib: dict, exclude_intrinsic=False) -> str:
     """
     calib = {
         'width': 0,  # Width of image
@@ -154,8 +154,9 @@ def create_calib_file(name: str, calib: dict) -> str:
     """
 
     cal_file = '//{}\n\n'.format(name)
-    cal_file += 'image_width = {};\n'.format(calib['width'])
-    cal_file += 'image_height = {};\n\n'.format(calib['height'])
+	if not exclude_intrinsic:
+	    cal_file += 'image_width = {};\n'.format(calib['width'])
+	    cal_file += 'image_height = {};\n\n'.format(calib['height'])
     cal_file += 'Pose =\n{\n'
     cal_file += '   Rotation = \n   {\n'
     cal_file += '      x = {};\n'.format(calib['rx'])
@@ -167,21 +168,22 @@ def create_calib_file(name: str, calib: dict) -> str:
     cal_file += '      y = {};\n'.format(calib['ty'])
     cal_file += '      z = {};\n'.format(calib['tz'])
     cal_file += '   }\n}\n'
-    cal_file += 'LeftSensor =\n{\n'
-    cal_file += '   channels = {};\n'.format(calib['ch'])
-    cal_file += '   focal_length_x = {};\n'.format(calib['fx'])
-    cal_file += '   focal_length_y = {};\n'.format(calib['fy'])
-    cal_file += '   optical_center_x = {};\n'.format(calib['cx'])
-    cal_file += '   optical_center_y = {};\n'.format(calib['cy'])
-    cal_file += '   pixel_size_x = {};\n'.format(calib['px'])
-    cal_file += '   pixel_size_y = {};\n'.format(calib['py'])
-    cal_file += '   dist_coeff_0 = {};\n'.format(calib['dist0'])
-    cal_file += '   dist_coeff_1 = {};\n'.format(calib['dist1'])
-    cal_file += '   dist_coeff_2 = {};\n'.format(calib['dist2'])
-    cal_file += '   dist_coeff_3 = {};\n'.format(calib['dist3'])
-    cal_file += '   dist_coeff_4 = {};\n'.format(calib['dist4'])
-    cal_file += '}\n\n'
-    cal_file += 'baseline = {};'.format(calib['bline'])
+    if not exclude_intrinsic:
+        cal_file += 'LeftSensor =\n{\n'
+        cal_file += '   channels = {};\n'.format(calib['ch'])
+        cal_file += '   focal_length_x = {};\n'.format(calib['fx'])
+        cal_file += '   focal_length_y = {};\n'.format(calib['fy'])
+        cal_file += '   optical_center_x = {};\n'.format(calib['cx'])
+        cal_file += '   optical_center_y = {};\n'.format(calib['cy'])
+        cal_file += '   pixel_size_x = {};\n'.format(calib['px'])
+        cal_file += '   pixel_size_y = {};\n'.format(calib['py'])
+        cal_file += '   dist_coeff_0 = {};\n'.format(calib['dist0'])
+        cal_file += '   dist_coeff_1 = {};\n'.format(calib['dist1'])
+        cal_file += '   dist_coeff_2 = {};\n'.format(calib['dist2'])
+        cal_file += '   dist_coeff_3 = {};\n'.format(calib['dist3'])
+        cal_file += '   dist_coeff_4 = {};\n'.format(calib['dist4'])
+        cal_file += '}\n\n'
+        cal_file += 'baseline = {};'.format(calib['bline'])
 
     return cal_file
 
@@ -296,8 +298,8 @@ class RovisDataBase:
                 return ''
 
             string = '{'
-            for in_src in self.input_sources:
-                string += '{0}-{1}'.format(core_id, in_src)
+            inputs_str = ['{0}-{1}'.format(core_id, in_src) for in_src in self.input_sources]
+            string += ';'.join(inputs_str)
             string += '}'
 
             return string
@@ -339,7 +341,7 @@ class RovisDataBase:
         bat.close()
 
         self.created = True
-        print('Database successfully created at {}/.\n'.format(self.db_path))
+        print('Database successfully created at {}/.'.format(self.db_path))
 
     def update_db(self):
         # Update csvs

@@ -25,6 +25,7 @@ class DepthSensor(BaseSensor):
     def __init__(self, name, parent_actor, client_args):
         super().__init__(name, parent_actor, client_args)
         self.has_capture = True
+        self.channels = 3
 
     # ==================== General sensor methods ====================
     def setup(self):
