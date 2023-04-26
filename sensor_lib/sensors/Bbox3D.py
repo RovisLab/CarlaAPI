@@ -173,7 +173,7 @@ class BoundingBoxesHandler(object):
 
     def get_image_bbox(self, actor):
         # Check max range
-        if self.get_distance(actor.get_transform(), self.parent.get_transform()) > self.range:
+        if actor.get_location().distance(self.parent.get_location()) > self.range:
             return [], []
 
         # Get bbox 3D corners in the bbox space and bbox real size
@@ -263,16 +263,6 @@ class BoundingBoxesHandler(object):
         rovis_bbox['cls'] = self.get_cls(actor)
 
         return rovis_bbox
-
-    @staticmethod
-    def get_distance(veh_tr_1, veh_tr_2):
-        veh_loc_1 = veh_tr_1.location
-        veh_loc_2 = veh_tr_2.location
-
-        dist = np.sqrt((veh_loc_1.x-veh_loc_2.x)**2 +
-                       (veh_loc_1.y-veh_loc_2.y)**2 +
-                       (veh_loc_1.z-veh_loc_2.z)**2)
-        return dist
 
     @staticmethod
     def _create_bb_points(actor):
