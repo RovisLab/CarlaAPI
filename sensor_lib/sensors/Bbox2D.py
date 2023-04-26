@@ -72,7 +72,7 @@ class Bbox2DSensor(BaseSensor):
         window_name = '{} - {}'.format(self.parent_name, self.name)
         background = np.zeros((self.height, self.width, 3), dtype=np.dtype('uint8'))
         while not self.stop_view:
-            bboxes, bboxes_cls = self.get_data()
+            bboxes = self.get_data()
             if len(bboxes) == 0:
                 time.sleep(0.001)
                 continue
@@ -259,10 +259,17 @@ class BoundingBoxesHandler(object):
     def get_cls(actor):
         sem_tags = actor.semantic_tags
 
-        if len(sem_tags) == 0:
-            return 0  # Unlabeled
-        else:
-            return sem_tags[0]  # Apparently works
+        ignored_list = ('spectator', 'traffic.unknown', 'sensor', 'controller')
+        if actor.type_id.startswith(ignored_list):
+            return 0  # Unlabeled / invalid
+
+        if actor.type_id == 'traffic.traffic_light':
+            return sem_tags[0] if sem_tags[0] != 5 else sem_tags[1]
+
+        if actor.type_id.startswith('traffic'):  # Traffic sign
+            return 18  # Traffic sign cls
+
+        return sem_tags[0]
 
     @staticmethod
     def draw_bboxes(bboxes, image, thickness=1):

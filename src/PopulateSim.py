@@ -52,8 +52,9 @@ class PopulateSim(object):
         final_veh_num = self.veh_num
         if final_veh_num < number_of_spawn_points:
             np.random.shuffle(veh_spawn_pts)
-        elif args.number_of_vehicles > number_of_spawn_points:
-            print('requested {} vehicles, but could only find {} spawn points')
+        elif self.veh_num > number_of_spawn_points:
+            print(' # Requested {} vehicles, but could only find {} spawn points.'.
+                  format(self.veh_num, number_of_spawn_points))
             final_veh_num = number_of_spawn_points
 
         # Find blueprints

@@ -154,9 +154,9 @@ def create_calib_file(name: str, calib: dict, exclude_intrinsic=False) -> str:
     """
 
     cal_file = '//{}\n\n'.format(name)
-	if not exclude_intrinsic:
-	    cal_file += 'image_width = {};\n'.format(calib['width'])
-	    cal_file += 'image_height = {};\n\n'.format(calib['height'])
+    if not exclude_intrinsic:
+        cal_file += 'image_width = {};\n'.format(calib['width'])
+        cal_file += 'image_height = {};\n\n'.format(calib['height'])
     cal_file += 'Pose =\n{\n'
     cal_file += '   Rotation = \n   {\n'
     cal_file += '      x = {};\n'.format(calib['rx'])

@@ -81,7 +81,7 @@ class CameraSensor(BaseSensor):
                 elif key == ord('q'):  # Close just the viewer
                     self.stop_view = True
                 elif key == ord(' '):  # Print transform of vehicle
-                    print(self._parent.get_transform())
+                    print(' - Vehicle {} transform: {}'.format(self.parent_name, self._parent.get_transform()))
 
         time.sleep(0.001)
         if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) > 1:
