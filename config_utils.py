@@ -40,7 +40,8 @@ def check_config():
     client_key_type = {  # Each client
         'position': tuple, 'orientation': tuple, 'random_spawn': bool,
         'actor_type': str, 'control': str, 'cam_width': int,
-        'cam_height': int, 'cam_fov': int, 'Comm': libconf.AttrDict
+        'cam_height': int, 'cam_fov': int, 'Comm': libconf.AttrDict,
+        'trl_control': bool
     }
     comm_key_type = {
         'type': str, 'pos': str, 'width': int, 'height': int,

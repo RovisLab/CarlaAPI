@@ -157,6 +157,10 @@ class CarlaClient(object):
             # Signal sensors to send data
             self.sensors.send_data()
 
+            # Control traffic lights
+            if self.args['trl_control']:
+                self.traffic_light_control()
+
             # Draw radar on the world
             # self.radar_sensor.draw_radar(self.world)
 
@@ -287,6 +291,12 @@ class CarlaClient(object):
 
         car.apply_control(control)
         return False
+
+    def traffic_light_control(self):
+        # If the actor is at a traffic light, make it green
+        # Works only if the actor is the first car at the traffic light
+        if self.actor.is_at_traffic_light():
+            self.actor.get_traffic_light().set_state(carla.TrafficLightState.Green)
 
     # Set advanced physics controls for the current actor
     def physics_control(self):
