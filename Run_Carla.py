@@ -93,7 +93,7 @@ def main():
 
 
 if __name__ == "__main__":
-    config_path = r"configs/scenario_custom.conf"
+    config_path = r"configs/Save_data_Iulia.conf"
 
     # Configuration setup
     if not conf.config_setup(config_path):

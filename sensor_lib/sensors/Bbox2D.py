@@ -8,6 +8,7 @@ import cv2
 import weakref
 
 import config_utils as conf
+from sensor_lib.sensor_utils import CARLA_OBJECT_TYPES
 from sensor_lib.BaseSensor import BaseSensor
 
 try:
@@ -22,13 +23,21 @@ import carla
 
 
 class Bbox2DSensor(BaseSensor):
+    DEFAULT_FILTERS = ['vehicle.*', 'walker.*']
+
     def __init__(self, name, parent_actor, client_args):
         super().__init__(name, parent_actor, client_args)
         self.has_capture = True
         self.world = None
         self.bbox_handler = None
         self.range = -1  # Ignore range
-        self.filters = 'vehicle,walker'
+        self.trs = False  # Traffic signs
+        self.actor_filters = self.DEFAULT_FILTERS
+
+        # Used for filtering occluded bboxes
+        self.filter_method = 'none'  # none / depth
+        self.filter_sensor = None
+        self.filter_data = None
 
         self.generate_calib_mat()
 
@@ -39,33 +48,72 @@ class Bbox2DSensor(BaseSensor):
         for key in self.args.keys():
             if key == 'range':
                 self.range = self.args[key]
+            if key == 'traffic_signs':
+                self.trs = self.args[key]
+            if key == 'filter':
+                self.filter_method = self.args[key]
 
     def setup(self):
         self.world = self._parent.get_world()
         self.bbox_handler = BoundingBoxesHandler(self._parent, self, self.range)
+        self.bbox_handler.set_filter_method(self.filter_method)
+
+        if self.filter_method == 'depth':
+            depth_bp = self.world.get_blueprint_library().find('sensor.camera.depth')
+            depth_bp.set_attribute('image_size_x', str(int(self.width)))
+            depth_bp.set_attribute('image_size_y', str(int(self.height)))
+            depth_bp.set_attribute('fov', str(self.fov))
+
+            self.filter_sensor = self.world.spawn_actor(
+                depth_bp, self.sensor_transform, attach_to=self._parent
+            )
+            weak_self = weakref.ref(self)
+            self.filter_sensor.listen(
+                lambda data: weak_self().sensor_callback(weak_self, data)
+            )
 
     def get_data(self, optional_data_type=''):
-        # Get filters
-        actor_filters = []
-        for data_type in self.filters.split(','):
-            actor_filters.append('{}.*'.format(data_type))
-
-        if len(actor_filters) == 0:
+        if len(self.actor_filters) == 0:
             return []
+
+        # Filter bboxes using the sensor filter
+        depth_meters = None
+        if self.filter_method == 'depth' and self.filter_data is not None:
+            array = np.array(self.filter_data.raw_data)
+            array = array.reshape((self.height, self.width, 4))
+            array = array.astype(np.float32)
+            # Apply (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1).
+            normalized_depth = np.dot(array[:, :, :3], [65536.0, 256.0, 1.0])
+            normalized_depth /= 16777215.0  # (256.0 * 256.0 * 256.0 - 1.0)
+            depth_meters = normalized_depth * 1000
 
         # Get bounding boxes 2D
         bboxes = []
         try:
             if self.bbox_handler is not None:
-                bboxes = self.bbox_handler.get_bboxes(actor_filters)
+                if self.filter_method == 'depth' and self.filter_data is not None:
+                    bboxes = self.bbox_handler.get_bboxes(self.actor_filters,
+                                                          filter_data=depth_meters, show_trs=self.trs)
+                else:
+                    bboxes = self.bbox_handler.get_bboxes(self.actor_filters,
+                                                          filter_data=None, show_trs=self.trs)
         except RuntimeError:  # Client closed but still tries to process this
             return []
 
         return bboxes  # bboxes - [[x_min, y_min, x_max, y_max, cls], ...]
 
     @staticmethod
-    def sensor_callback(weak_ref, data):
-        pass
+    def sensor_callback(weak_ref, data):  # Used for the filtering sensor
+        self = weak_ref()
+        if self.capture:
+            self.filter_data = data
+            self.capture = False
+
+    def terminate(self):
+        if self.filter_sensor is not None:
+            self.filter_sensor.destroy()
+
+        super().terminate()
 
     # ==================== Viewer methods ====================
     def do_view(self):
@@ -145,12 +193,16 @@ class BoundingBoxesHandler(object):
         self.transform = self.sensor.sensor_transform  # Sensor in relation to main vehicle
         self.calib = self.sensor.calib  # Camera calib
         self.range = max_range if max_range > 0 else np.inf  # Max range for bbox detection
+        self.filter_method = 'none'
+        self.filter_data = None
 
         # This matrix stays the same, so it's faster to compute this only once
         self.veh_sensor_mat = np.linalg.inv(self.get_matrix(self.transform))
 
-    def get_bboxes(self, actor_filters):
+    def get_bboxes(self, actor_filters, filter_data=None, show_trs=False):
+        self.filter_data = np.transpose(filter_data)
         actors = self.world.get_actors()
+        # bbox_set = self.world.get_level_bbs()
         bboxes = []
         for actor_filter in actor_filters:
             actor_list = actors.filter(actor_filter)
@@ -164,7 +216,8 @@ class BoundingBoxesHandler(object):
 
     def get_bbox(self, actor):
         # Check max range
-        if actor.get_location().distance(self.parent.get_location()) > self.range:
+        parent_target_dist = actor.get_location().distance(self.parent.get_location())
+        if parent_target_dist > self.range:
             return []
 
         # Get bbox 3D corners in the vehicle space and bbox real size
@@ -204,7 +257,18 @@ class BoundingBoxesHandler(object):
         if x_min == x_max or y_min == y_max:
             return []
 
+        # Filter bbox using the filter sensor
+        if self.filter_method == 'depth' and self.filter_data is not None:
+            try:
+                if parent_target_dist > (self.filter_data[int((x_min+x_max)/2), int((y_min+y_max)/2)] + 10):
+                    return []
+            except IndexError:
+                return []
+
         return [x_min, y_min, x_max, y_max, self.get_cls(actor)]
+
+    def set_filter_method(self, filter_method):
+        self.filter_method = filter_method
 
     @staticmethod
     def _create_bb_points(actor):

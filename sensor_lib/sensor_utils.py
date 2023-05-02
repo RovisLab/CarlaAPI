@@ -74,5 +74,12 @@ def get_intrinsics(width, height, fov):
     return mat
 
 
+CARLA_OBJECT_TYPES = {
+    'pedestrians': {'label': carla.CityObjectLabel.Pedestrians, 'cls': 4},
+    'vehicle': {'label': carla.CityObjectLabel.Vehicles, 'cls': 10},
+    'traffic_signs': {'label': carla.CityObjectLabel.TrafficSigns, 'cls': 12},
+    'traffic_light': {'label': carla.CityObjectLabel.TrafficLight, 'cls': 18},
+}
+
 if __name__ == '__main__':
     print('NOT runnable. Check \'Run_Carla.py\'')

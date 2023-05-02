@@ -22,13 +22,16 @@ import carla
 
 
 class Bbox3DSensor(BaseSensor):
+    DEFAULT_FILTERS = ['vehicle.*', 'walker.*']
+
     def __init__(self, name, parent_actor, client_args):
         super().__init__(name, parent_actor, client_args)
         self.has_capture = True
         self.world = None
         self.bbox_handler = None
         self.range = -1  # Ignore range
-        self.filters = 'vehicle,walker'
+        self.trs = False  # Traffic signs
+        self.actor_filters = self.DEFAULT_FILTERS
 
         self.generate_calib_mat()
 
@@ -39,6 +42,8 @@ class Bbox3DSensor(BaseSensor):
         for key in self.args.keys():
             if key == 'range':
                 self.range = self.args[key]
+            if key == 'traffic_signs':
+                self.trs = self.args[key]
 
     def setup(self):
         self.world = self._parent.get_world()
@@ -51,18 +56,13 @@ class Bbox3DSensor(BaseSensor):
         if optional_data_type not in data_types:
             optional_data_type = 'image'
 
-        # Get filters
-        actor_filters = []
-        for data_type in self.filters.split(','):
-            actor_filters.append('{}.*'.format(data_type))
-
-        if len(actor_filters) == 0:
+        if len(self.actor_filters) == 0:
             return []
 
         if optional_data_type == 'image':
-            return self.bbox_handler.get_image_bboxes(actor_filters)
+            return self.bbox_handler.get_image_bboxes(self.actor_filters, self.trs)
         elif optional_data_type == 'rovis':
-            return self.bbox_handler.get_rovis_bboxes(actor_filters)
+            return self.bbox_handler.get_rovis_bboxes(self.actor_filters, self.trs)
 
         return None
 
@@ -158,7 +158,7 @@ class BoundingBoxesHandler(object):
 
         self.veh_sensor_mat = np.linalg.inv(self.get_matrix(self.transform))
 
-    def get_image_bboxes(self, actor_filters):
+    def get_image_bboxes(self, actor_filters, show_trs=False):
         actors = self.world.get_actors()
         bboxes = []  # Saves all bboxes pts in sensor cords
         for actor_filter in actor_filters:
@@ -196,7 +196,7 @@ class BoundingBoxesHandler(object):
             return camera_bbox
         return []
 
-    def get_rovis_bboxes(self, actor_filters):
+    def get_rovis_bboxes(self, actor_filters, show_trs=False):
         actors = self.world.get_actors()
 
         # rovis_bboxes = [ {center, cls, size, rot}, ... ]

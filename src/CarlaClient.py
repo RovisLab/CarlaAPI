@@ -175,7 +175,7 @@ class CarlaClient(object):
             elif control == 'static':
                 pass  # Do nothing
 
-            # self.custom_viewer()
+            self.custom_viewer()
 
             if self.args['control'] == 'manual':
                 try:
@@ -192,18 +192,18 @@ class CarlaClient(object):
 
     # Custom viewer
     def custom_viewer(self):
-        # Combines 3D with Camera
-        if 'CamFront' not in self.sensors.keys() or 'ObjDet3D' not in self.sensors.keys():
+        # Combines 2D with Camera
+        if 'CameraFront' not in self.sensors.keys() or 'Det2DFront' not in self.sensors.keys():
             return
 
-        image = self.sensors.get_data('CamFront')
-        bboxes = self.sensors.get_data('ObjDet3D', 'image')
+        image = self.sensors.get_data('CameraFront')
+        bboxes = self.sensors.get_data('Det2DFront', 'image')
 
         if image is not None:
-            image = self.sensors.get('ObjDet3D').draw_bboxes(bboxes, image.copy())
+            image = self.sensors.get('Det2DFront').draw_bboxes(bboxes, image.copy())
 
         if image is not None:
-            cv2.imshow('TEST', image)
+            cv2.imshow('Custom_viewer', image)
             cv2.waitKey(1)
 
     # Update capture flags for sensors

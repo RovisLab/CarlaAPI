@@ -47,7 +47,8 @@ def check_config():
         'fov': int, 'view': bool, 'port': int, 'send': bool,
         'gamma': int, 'range': int, 'channels': int, 'pps': int,
         'rot_freq': int, 'h_fov': int, 'v_fov': int, 'vel_range': int,
-        'lower_fov': int, 'upper_fov': int
+        'lower_fov': int, 'upper_fov': int, 'traffic_signs': bool,
+        'filter': str
     }
     req_comm_keys = ['type', 'pos']
     db_key_type = {
