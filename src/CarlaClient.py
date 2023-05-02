@@ -175,7 +175,7 @@ class CarlaClient(object):
             elif control == 'static':
                 pass  # Do nothing
 
-            self.custom_viewer()
+            # self.custom_viewer()
 
             if self.args['control'] == 'manual':
                 try:

@@ -47,8 +47,8 @@ def check_config():
         'fov': int, 'view': bool, 'port': int, 'send': bool,
         'gamma': int, 'range': int, 'channels': int, 'pps': int,
         'rot_freq': int, 'h_fov': int, 'v_fov': int, 'vel_range': int,
-        'lower_fov': int, 'upper_fov': int, 'traffic_signs': bool,
-        'filter': str
+        'lower_fov': int, 'upper_fov': int, 'filter': str,
+        'cls': tuple
     }
     req_comm_keys = ['type', 'pos']
     db_key_type = {
@@ -243,7 +243,7 @@ def config_setup(conf_path):
 
 if __name__ == '__main__':
     # Test config file
-    config_path = r"configs/scenario_custom.conf"
+    config_path = r"configs/config_example.conf"
 
     if config_setup(config_path):
         print(' # Configuration is valid.')

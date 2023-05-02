@@ -23,16 +23,13 @@ import carla
 
 
 class Bbox2DSensor(BaseSensor):
-    DEFAULT_FILTERS = ['vehicle.*', 'walker.*']
-
     def __init__(self, name, parent_actor, client_args):
         super().__init__(name, parent_actor, client_args)
         self.has_capture = True
         self.world = None
         self.bbox_handler = None
         self.range = -1  # Ignore range
-        self.trs = False  # Traffic signs
-        self.actor_filters = self.DEFAULT_FILTERS
+        self.actor_filters = ("pedestrians", "vehicles")  # Default values. For all values, check sensor_utils.py
 
         # Used for filtering occluded bboxes
         self.filter_method = 'none'  # none / depth
@@ -48,10 +45,10 @@ class Bbox2DSensor(BaseSensor):
         for key in self.args.keys():
             if key == 'range':
                 self.range = self.args[key]
-            if key == 'traffic_signs':
-                self.trs = self.args[key]
             if key == 'filter':
                 self.filter_method = self.args[key]
+            if key == 'cls':
+                self.actor_filters = self.args[key]
 
     def setup(self):
         self.world = self._parent.get_world()
@@ -92,11 +89,9 @@ class Bbox2DSensor(BaseSensor):
         try:
             if self.bbox_handler is not None:
                 if self.filter_method == 'depth' and self.filter_data is not None:
-                    bboxes = self.bbox_handler.get_bboxes(self.actor_filters,
-                                                          filter_data=depth_meters, show_trs=self.trs)
+                    bboxes = self.bbox_handler.get_bboxes(self.actor_filters, filter_data=depth_meters)
                 else:
-                    bboxes = self.bbox_handler.get_bboxes(self.actor_filters,
-                                                          filter_data=None, show_trs=self.trs)
+                    bboxes = self.bbox_handler.get_bboxes(self.actor_filters, filter_data=None)
         except RuntimeError:  # Client closed but still tries to process this
             return []
 
@@ -199,32 +194,30 @@ class BoundingBoxesHandler(object):
         # This matrix stays the same, so it's faster to compute this only once
         self.veh_sensor_mat = np.linalg.inv(self.get_matrix(self.transform))
 
-    def get_bboxes(self, actor_filters, filter_data=None, show_trs=False):
+    def get_bboxes(self, actor_filters, filter_data=None):
         self.filter_data = np.transpose(filter_data)
-        actors = self.world.get_actors()
-        # bbox_set = self.world.get_level_bbs()
-        bboxes = []
+        result_bboxes = []
         for actor_filter in actor_filters:
-            actor_list = actors.filter(actor_filter)
-            for actor in actor_list:
-                bbox = self.get_bbox(actor)
+            carla_bbox_list = self.world.get_level_bbs(CARLA_OBJECT_TYPES[actor_filter]['label'])
+            for carla_bbox in carla_bbox_list:
+                bbox = self.get_bbox(carla_bbox, cls=CARLA_OBJECT_TYPES[actor_filter]['cls'])
                 if len(bbox) == 0:
                     continue
-                bboxes.append(bbox)
+                result_bboxes.append(bbox)
 
-        return bboxes
+        return result_bboxes
 
-    def get_bbox(self, actor):
+    def get_bbox(self, carla_bbox, cls):
         # Check max range
-        parent_target_dist = actor.get_location().distance(self.parent.get_location())
+        parent_target_dist = carla_bbox.location.distance(self.parent.get_location())
         if parent_target_dist > self.range:
             return []
 
         # Get bbox 3D corners in the vehicle space and bbox real size
-        bb_cords = self._create_bb_points(actor)
+        bb_cords = self._create_bb_points(carla_bbox.extent)
 
         # Transform bboxes from vehicle space to world space
-        bb_world = self._bboxes_to_world(bb_cords, actor)
+        bb_world = np.dot(self.get_matrix(carla_bbox), np.transpose(bb_cords))
 
         # Transform bboxes from world space to sensor space
         bb_sensor = self._bboxes_to_sensor(bb_world)[:3, :]
@@ -265,15 +258,14 @@ class BoundingBoxesHandler(object):
             except IndexError:
                 return []
 
-        return [x_min, y_min, x_max, y_max, self.get_cls(actor)]
+        return [x_min, y_min, x_max, y_max, cls]
 
     def set_filter_method(self, filter_method):
         self.filter_method = filter_method
 
     @staticmethod
-    def _create_bb_points(actor):
+    def _create_bb_points(extent):
         cords = np.zeros((8, 4))
-        extent = actor.bounding_box.extent  # Distance of bbox3D / 2
         cords[0, :] = np.array([extent.x, extent.y, -extent.z, 1])
         cords[1, :] = np.array([-extent.x, extent.y, -extent.z, 1])
         cords[2, :] = np.array([-extent.x, -extent.y, -extent.z, 1])
@@ -283,19 +275,6 @@ class BoundingBoxesHandler(object):
         cords[6, :] = np.array([-extent.x, -extent.y, extent.z, 1])
         cords[7, :] = np.array([extent.x, -extent.y, extent.z, 1])
         return cords
-
-    def _bboxes_to_world(self, cords, actor):
-        # BBox to vehicle matrix
-        # bb_vehicle_matrix = self.get_matrix(carla.Transform(actor.bounding_box.get_transform()))
-        bb_vehicle_matrix = self.get_matrix(carla.Transform(actor.bounding_box.location))
-
-        # Vehicle to world matrix
-        vehicle_world_matrix = self.get_matrix(actor.get_transform())
-
-        # Apply transformations
-        bb_world_matrix = np.dot(vehicle_world_matrix, bb_vehicle_matrix)
-        bbox_world_cords = np.dot(bb_world_matrix, np.transpose(cords))
-        return bbox_world_cords
 
     def _bboxes_to_sensor(self, bb_world):
         # World to vehicle matrix
@@ -310,22 +289,6 @@ class BoundingBoxesHandler(object):
         return sensor_cords
 
     @staticmethod
-    def get_cls(actor):
-        sem_tags = actor.semantic_tags
-
-        ignored_list = ('spectator', 'traffic.unknown', 'sensor', 'controller')
-        if actor.type_id.startswith(ignored_list):
-            return 0  # Unlabeled / invalid
-
-        if actor.type_id == 'traffic.traffic_light':
-            return sem_tags[0] if sem_tags[0] != 5 else sem_tags[1]
-
-        if actor.type_id.startswith('traffic'):  # Traffic sign
-            return 18  # Traffic sign cls
-
-        return sem_tags[0]
-
-    @staticmethod
     def draw_bboxes(bboxes, image, thickness=1):
         for bbox in bboxes:
             # bbox = [x_min, y_min, x_max, y_max]
@@ -338,7 +301,7 @@ class BoundingBoxesHandler(object):
     @staticmethod
     def get_matrix(transform):
         # Generate transformation matrix from transform
-        # Transformation matrix: R_yaw * -R_pitch * -R_roll * T
+        # Transformation matrix: R_yaw * -R_pitch * -R_roll + T
         rotation = transform.rotation
         location = transform.location
         c_y = np.cos(np.radians(rotation.yaw))

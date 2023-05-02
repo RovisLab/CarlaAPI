@@ -8,6 +8,7 @@ import cv2
 import weakref
 
 import config_utils as conf
+from sensor_lib.sensor_utils import CARLA_OBJECT_TYPES
 from sensor_lib.BaseSensor import BaseSensor
 
 try:
@@ -22,16 +23,13 @@ import carla
 
 
 class Bbox3DSensor(BaseSensor):
-    DEFAULT_FILTERS = ['vehicle.*', 'walker.*']
-
     def __init__(self, name, parent_actor, client_args):
         super().__init__(name, parent_actor, client_args)
         self.has_capture = True
         self.world = None
         self.bbox_handler = None
         self.range = -1  # Ignore range
-        self.trs = False  # Traffic signs
-        self.actor_filters = self.DEFAULT_FILTERS
+        self.actor_filters = ("pedestrians", "vehicles")
 
         self.generate_calib_mat()
 
@@ -42,8 +40,8 @@ class Bbox3DSensor(BaseSensor):
         for key in self.args.keys():
             if key == 'range':
                 self.range = self.args[key]
-            if key == 'traffic_signs':
-                self.trs = self.args[key]
+            if key == 'cls':
+                self.actor_filters = self.args[key]
 
     def setup(self):
         self.world = self._parent.get_world()
@@ -60,9 +58,9 @@ class Bbox3DSensor(BaseSensor):
             return []
 
         if optional_data_type == 'image':
-            return self.bbox_handler.get_image_bboxes(self.actor_filters, self.trs)
+            return self.bbox_handler.get_image_bboxes(self.actor_filters)
         elif optional_data_type == 'rovis':
-            return self.bbox_handler.get_rovis_bboxes(self.actor_filters, self.trs)
+            return self.bbox_handler.get_rovis_bboxes(self.actor_filters)
 
         return None
 
@@ -158,29 +156,28 @@ class BoundingBoxesHandler(object):
 
         self.veh_sensor_mat = np.linalg.inv(self.get_matrix(self.transform))
 
-    def get_image_bboxes(self, actor_filters, show_trs=False):
-        actors = self.world.get_actors()
-        bboxes = []  # Saves all bboxes pts in sensor cords
+    def get_image_bboxes(self, actor_filters):
+        result_bboxes = []  # Saves all bboxes pts in sensor cords
         for actor_filter in actor_filters:
-            actor_list = actors.filter(actor_filter)
-            for actor in actor_list:
-                bbox = self.get_image_bbox(actor)
+            carla_bbox_list = self.world.get_level_bbs(CARLA_OBJECT_TYPES[actor_filter]['label'])
+            for carla_bbox in carla_bbox_list:
+                bbox = self.get_image_bbox(carla_bbox, cls=CARLA_OBJECT_TYPES[actor_filter]['cls'])
                 if len(bbox) == 0:
                     continue
-                bboxes.append(bbox)
+                result_bboxes.append(bbox)
 
-        return bboxes
+        return result_bboxes
 
-    def get_image_bbox(self, actor):
+    def get_image_bbox(self, carla_bbox, cls):
         # Check max range
-        if actor.get_location().distance(self.parent.get_location()) > self.range:
-            return [], []
+        if carla_bbox.location.distance(self.parent.get_location()) > self.range:
+            return []
 
-        # Get bbox 3D corners in the bbox space and bbox real size
-        bb_cords, _ = self._create_bb_points(actor)
+        # Get bbox 3D corners in the bbox space
+        bb_cords = self._create_bb_points(carla_bbox.extent)
 
-        # Transform bboxes from bbox space to vehicle space to world space
-        bb_world = self._bboxes_to_world(bb_cords, actor)
+        # Transform bboxes from bbox space to world space
+        bb_world = np.dot(self.get_matrix(carla_bbox), np.transpose(bb_cords))
 
         # Transform bboxes from world space to sensor space
         bb_sensor = self._bboxes_to_sensor(bb_world)[:3, :]
@@ -196,13 +193,12 @@ class BoundingBoxesHandler(object):
             return camera_bbox
         return []
 
-    def get_rovis_bboxes(self, actor_filters, show_trs=False):
+    def get_rovis_bboxes(self, actor_filters):
         actors = self.world.get_actors()
-
         # rovis_bboxes = [ {center, cls, size, rot}, ... ]
         rovis_bboxes = []
         for actor_filter in actor_filters:
-            actor_list = actors.filter(actor_filter)
+            actor_list = actors.filter(CARLA_OBJECT_TYPES[actor_filter]['tag'])
             for actor in actor_list:
                 rovis_bbox = self.get_rovis_bbox(actor)
                 if rovis_bbox is not None:
@@ -219,7 +215,7 @@ class BoundingBoxesHandler(object):
         }
 
         # Check max range
-        if self.get_distance(actor.get_transform(), self.parent.get_transform()) > self.range:
+        if actor.get_location().distance(self.parent.get_location()) > self.range:
             return None
 
         # Get bbox size
@@ -257,7 +253,7 @@ class BoundingBoxesHandler(object):
         rovis_bbox['center']['z'] = -bbox_center_rovis[2, 0]
 
         # Get rotation
-        rovis_bbox['rot'] = self.get_bboxes_rotation(actor)
+        rovis_bbox['rot'] = self.get_bboxes_rotation(actor.get_transform().rotation)
 
         # Get class
         rovis_bbox['cls'] = self.get_cls(actor)
@@ -276,11 +272,9 @@ class BoundingBoxesHandler(object):
         cords[5, :] = np.array([-extent.x, extent.y, extent.z, 1])
         cords[6, :] = np.array([-extent.x, -extent.y, extent.z, 1])
         cords[7, :] = np.array([extent.x, -extent.y, extent.z, 1])
+        return cords
 
-        bbox_size = [2*extent.x, 2*extent.y, 2*extent.z]
-        return cords, bbox_size
-
-    def get_bboxes_rotation(self, actor):
+    def get_bboxes_rotation(self, actor_rot):
         def limit_angle(angle):  # In interval [-180 180]
             while angle >= 180:
                 angle -= 360
@@ -292,7 +286,6 @@ class BoundingBoxesHandler(object):
             return angle*3.14/180
 
         rot = {'yaw': 0, 'pitch': 0, 'roll': 0}
-        actor_rot = actor.get_transform().rotation
         parent_rot = self.parent.get_transform().rotation
 
         rot['yaw'] = -deg2rad(limit_angle(actor_rot.yaw - parent_rot.yaw))
@@ -367,7 +360,7 @@ class BoundingBoxesHandler(object):
     @staticmethod
     def get_matrix(transform):
         # Generate transformation matrix from transform
-        # Transformation matrix: R_yaw * -R_pitch * -R_roll * T
+        # Transformation matrix: R_yaw * -R_pitch * -R_roll + T
         rotation = transform.rotation
         location = transform.location
         c_y = np.cos(np.radians(rotation.yaw))
