@@ -81,6 +81,8 @@ class BaseSensor(object):
                 self.sensor_transform = get_transform(self.args[key])
             elif key == 'view':
                 self.view = self.args[key]
+            elif key == 'view_dt':
+                self.viewer_delay = self.args[key]
 
     # Setup sensor
     def setup(self):
