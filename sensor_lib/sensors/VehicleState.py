@@ -40,7 +40,7 @@ class VehicleStateEstimation(BaseSensor):
         # Rovis direction = West
         actor_yaw = tr.rotation.yaw  # degrees
         actor_yaw = actor_yaw * math.pi / 180  # rad
-        heading = math.pi / 2 - actor_yaw
+        heading = 2 * math.pi - actor_yaw
 
         if heading < -math.pi:
             heading = 2 * math.pi + heading

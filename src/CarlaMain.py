@@ -292,7 +292,10 @@ class CarlaMain(object):
         print('')
         print(' # Termination started..')
         if conf.Database['save_data']:
-            print(' - Saved {} out of {} samples.'.format(self.data_count, conf.Database['samples']))
+            if conf.Database['samples'] == -1:
+                print(' - Saved {} samples.'.format(self.data_count))
+            else:
+                print(' - Saved {} out of {} samples.'.format(self.data_count, conf.Database['samples']))
 
         # Terminate population
         if conf.General['populate_sim']:
