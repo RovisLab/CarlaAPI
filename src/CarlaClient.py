@@ -232,14 +232,15 @@ class CarlaClient(object):
         self.sensors.get_data_to_save(ts_stop, frame_id)
 
     # Slot that is called when data is ready. Emits "data_is_ready_signal" when done for CarlaClients.
-    # def on_data_collected(self, data_collected):
-    #     self.data_is_ready_signal.emit(self.name, data_collected)
     def on_data_collected(self, name, data_collected):
         self.data_is_ready_signal.emit(name, data_collected)
 
     # Control handler for 'rovis'
     def rovis_control(self, car):
-        control = car.get_control()
+        try:
+            control = car.get_control()
+        except RuntimeError:  # destroyed actor
+            return
 
         throttle, steering = self.sensors.get_data(self.actuator_name)
 
