@@ -96,9 +96,10 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Carla Rovis API 2.0')
 
+    default_path = r'configs/config_simple.conf'
+
     parser.add_argument('conf', nargs='?', help='Path to config file.',
-                        default=r"configs/config_simple.conf"
-                        )
+                        default=default_path)
 
     # Configuration setup
     if not conf.config_setup(parser.parse_args().conf):
