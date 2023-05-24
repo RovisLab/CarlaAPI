@@ -66,11 +66,12 @@ class ActuatorControl(BaseSensor):
 
                 if self.event.type == enet.EVENT_TYPE_CONNECT:
                     print(' - {}:{} connected to {}.'.format(self.parent_name, self.name, self.event.peer.address))
+                    self.connected = True
 
                 elif self.event.type == enet.EVENT_TYPE_DISCONNECT:
-                    print(' - {}:{} disconnected from {}.'.format(self.parent_name, self.name, self.event.peer.address))
                     self.throttle = 0
-                    self.terminate_server = True
+                    self.steering = 0
+                    self.connected = False
 
                 elif self.event.type == enet.EVENT_TYPE_RECEIVE:
                     self.decode_data_transfer()
