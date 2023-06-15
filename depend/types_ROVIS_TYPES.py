@@ -9,15 +9,7 @@ rovis_types_header = os.path.join(os.path.dirname(__file__), CFG.ROVIS_VISION.TY
 ROVIS_FILTER_TYPE_ENUM_NAME = "ROVIS_FILTER_TYPE"
 ROVIS_DATA_TYPE_ENUM_NAME = "ROVIS_DATA_TYPE"
 
-if not os.path.exists(CFG.BASE.PATH):
-    base_path = os.path.abspath(os.path.join(os.path.abspath(""), "../..", "..", ".."))
-    print("Warning: Base path found in config_utils.py not found. Defaulting to ", base_path)
-    CFG.BASE.PATH = base_path
-
-# conf_file = os.path.join(CFG.BASE.PATH, "RovisDojo", "annotation_tool", "config.json")
-
-# if not os.path.exists(conf_file):
-conf_file = r"C:\dev\src\RovisLab\RovisVision\src\utils\CarlaAPI\depend\config.json"
+conf_file = CFG.ROVIS_VISION.CONF_FILE
 
 
 def get_datatypes_as_dict(rovis_types_path, enum_name):
