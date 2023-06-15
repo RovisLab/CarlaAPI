@@ -16,13 +16,17 @@ __C = edict()
 
 cfg = __C
 __C.BASE = edict()
-__C.BASE.PATH = os.getcwd()  # Current path: <>/<>/CarlaAPI
-
-# ===================================
-# Set ROVIS VISION parameters
+__C.BASE.PATH = os.getcwd()  # <>/<>/CarlaAPI
 __C.ROVIS_VISION = edict()
 
-# Found in RovisVision, but needed here
-__C.ROVIS_VISION.TYPES_FILE = __C.BASE.PATH + r'/depend/ROVIS_TYPES.h'
-__C.ROVIS_VISION.CONF_FILE = __C.BASE.PATH + r'/depend/config.json'
+# Look for RovisTypes
+found_RovisTypes = False
+if "ROVISLAB_DIR" in os.environ:
+    RovisTypes_path = os.environ['ROVISLAB_DIR'] + r'/RovisVision/src/rovis_toolkit/src/ROVIS_TYPES.h'
+    if os.path.exists(RovisTypes_path):
+        __C.ROVIS_VISION.TYPES_FILE = RovisTypes_path
+        found_RovisTypes = True
+if not found_RovisTypes:
+    __C.ROVIS_VISION.TYPES_FILE = __C.BASE.PATH + r'/depend/ROVIS_TYPES.h'
 
+__C.ROVIS_VISION.CONF_FILE = __C.BASE.PATH + r'/depend/config.json'
