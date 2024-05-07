@@ -24,36 +24,45 @@ except IndexError:
 
 import carla
 
-
-class MonoCameraSensor(object):
+class CameraSensor(object):
     def __init__(self, name,
                  parent_actor,
                  view_width=640,
-                 view_height=480,
+                 view_height=360,
                  view_fov=90):
         self.name = name
-        self.sensor = None
-        self.image = None
+        self.sensor_rgb = None
+        self.sensor_depth = None
+        self.img_rgb = None
+        self.img_depth = None
         self._parent = parent_actor
         self.view_width = view_width
         self.view_height = view_height
         self.view_fov = view_fov
-        self.capture = True
 
-    def setup_camera(self, camera_transform):
+    def setup_cameras(self, camera_transform):
+        self.setup_camera_rgb(camera_transform)
+        self.setup_camera_depth(camera_transform)
+
+    def setup_camera_rgb(self, camera_transform):
         world = self._parent.get_world()
-        camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-        camera_bp.set_attribute('image_size_x', str(int(self.view_width)))
-        camera_bp.set_attribute('image_size_y', str(int(self.view_height)))
-        camera_bp.set_attribute('fov', str(self.view_fov))
-
-        self.sensor = world.spawn_actor(
-            camera_bp, camera_transform, attach_to=self._parent
-        )
         weak_self = weakref.ref(self)
-        self.sensor.listen(
-            lambda image: weak_self().camera_callback(weak_self, image)
-        )
+        camera_bp_rgb = world.get_blueprint_library().find('sensor.camera.rgb')
+        camera_bp_rgb.set_attribute('image_size_x', str(int(self.view_width)))
+        camera_bp_rgb.set_attribute('image_size_y', str(int(self.view_height)))
+        camera_bp_rgb.set_attribute('fov', str(self.view_fov))
+        self.sensor_rgb = world.spawn_actor(camera_bp_rgb, camera_transform, attach_to=self._parent)
+        self.sensor_rgb.listen(lambda image: weak_self().camera_rgb_callback(weak_self, image))
+
+    def setup_camera_depth(self, camera_transform):
+        world = self._parent.get_world()
+        weak_self = weakref.ref(self)
+        camera_bp_depth = world.get_blueprint_library().find('sensor.camera.depth')
+        camera_bp_depth.set_attribute('image_size_x', str(int(self.view_width)))
+        camera_bp_depth.set_attribute('image_size_y', str(int(self.view_height)))
+        camera_bp_depth.set_attribute('fov', str(self.view_fov))
+        self.sensor_depth = world.spawn_actor(camera_bp_depth, camera_transform, attach_to=self._parent)
+        self.sensor_depth.listen(lambda image: weak_self().camera_depth_callback(weak_self, image))
 
     def get_intrinsics(self):
         """
@@ -71,11 +80,24 @@ class MonoCameraSensor(object):
 
         return mat
 
-    def process_image(self):
-        if self.image is not None:
-            array = np.frombuffer(self.image.raw_data, dtype=np.dtype("uint8"))
-            array = np.reshape(array, (self.image.height, self.image.width, 4))
+    def process_img_rgb(self):
+        if self.img_rgb is not None:
+            array = np.frombuffer(self.img_rgb.raw_data, dtype=np.dtype("uint8"))
+            array = np.reshape(array, (self.img_rgb.height, self.img_rgb.width, 4))
+            return array[:, :, :3]
+        return None
+
+    def process_img_depth(self):
+        if self.img_depth is not None:
+            array = np.frombuffer(self.img_depth.raw_data, dtype=np.dtype("uint8"))
+            array = np.reshape(array, (self.img_depth.height, self.img_depth.width, 4))
             array = array[:, :, :3]
+
+            # array = array[:, :, ::-1]
+            # gray_depth = ((array[:, :, 0] + array[:, :, 1] * 256.0 + array[:, :, 2] * 256.0 * 256.0) / ((256.0 * 256.0 * 256.0) - 1))
+            # gray_depth = gray_depth.astype(np.float32)
+            # gray_depth = gray_depth * 1000.0
+
             return array
         return None
 
@@ -83,28 +105,34 @@ class MonoCameraSensor(object):
         threading.Thread(target=self.do_view).start()
 
     def do_view(self):
-        while self.sensor is not None:
-            image = self.process_image()
+        while self.sensor_rgb is not None and self.sensor_depth is not None:
+            img_rgb = self.process_img_rgb()
+            if img_rgb is not None:
+                cv2.imshow(self.name + " RGB", img_rgb)
 
-            if image is not None:
-                cv2.imshow(self.name, image)
-                cv2.waitKey(1)
-        time.sleep(0.001)
+            # img_depth = self.process_img_depth()
+            # if img_depth is not None:
+            #     img_depth = img_depth.astype(np.uint8)
+            #     cv2.imshow(self.name + " Depth", img_depth)
+
+            cv2.waitKey(1)
 
     @staticmethod
-    def camera_callback(weak_ref, image):
+    def camera_rgb_callback(weak_ref, image):
         self = weak_ref()
-        # print("camera callback, ", self._parent)
-        # self.image = image
-        if self.capture:
-            self.image = image
-            self.capture = False
+        self.img_rgb = image
+
+    @staticmethod
+    def camera_depth_callback(weak_ref, image):
+        self = weak_ref()
+        self.img_depth = image
 
     def destroy(self):
-        self.sensor.destroy()
+        self.sensor_rgb.destroy()
+        self.sensor_depth.destroy()
 
 
-class MonoCameraServer(object):
+class CameraServer(object):
     def __init__(self,
                  ip,
                  port,
@@ -143,18 +171,27 @@ class MonoCameraServer(object):
     def do_send(self):
         while not self.is_terminated:
             if self.cam_sensor is not None:
-                data = self.cam_sensor.process_image()
+                rgb = self.cam_sensor.process_img_rgb()
+                depth = self.cam_sensor.process_img_depth()
 
-                if data is not None:
-                    images_data = "{\"ImagesData\":\""
-                    front_base = str(base64.b64encode(cv2.imencode(".jpg", data)[1]))
+                if rgb is not None and depth is not None:
+                    images_data = "{\"RGB\":\""
+                    front_base = str(base64.b64encode(cv2.imencode(".jpg", rgb)[1]))
                     front_base = front_base[2:len(front_base) - 1]
                     images_data += "{}".format(front_base)
+
+                    images_data += '\",\"Depth\":\"'
+                    depth_base = str(base64.b64encode(cv2.imencode(".png", depth)[1]))
+                    depth_base = depth_base[2:len(depth_base) - 1]
+                    images_data += "{}&".format(depth_base)
+
                     images_data += "&\"}"
 
                     encoded_data = bytes(str(images_data), 'utf8')
                     packet = enet.Packet(encoded_data, enet.PACKET_FLAG_RELIABLE)
                     self.host.broadcast(0, packet)
+
+                    print("Send image\t[{}]".format(time.time()))
                 elif self.event.type == enet.EVENT_TYPE_DISCONNECT:
                     break
             time.sleep(self.dt + 0.015)

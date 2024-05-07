@@ -8,7 +8,7 @@ import numpy as np
 import time
 
 from clients.VehicleActuatorClient import VehicleActuatorClient
-from servers.MonoCameraServer import MonoCameraServer, MonoCameraSensor
+from servers.CameraServer import CameraServer, CameraSensor
 from servers.SemSegCameraServer import SemSegCameraServer, SemSegCameraSensor
 from servers.VehicleStateEstimationServer import StateMeasurementServer
 from servers.ImuServer import IMUServer, IMUSensor
@@ -16,7 +16,7 @@ from servers.DepthServer import DepthSensor, DepthServer
 from servers.LidarServer import LidarSensor, LidarServer
 from servers.RadarServer import RadarSensor, RadarServer
 from CarlaClient import ip_carla, port_carla
-from sensors import *
+from sensors import get_transform
 
 try:
     import pygame
@@ -122,12 +122,12 @@ class CarlaClientPygame(object):
         self.car.apply_control(carla.VehicleControl(manual_gear_shift=False))
 
         # Setup camera
-        self.camera = MonoCameraSensor('',
-                                       self.car,
-                                       self.view_width,
-                                       self.view_height,
-                                       self.view_fov)
-        self.camera.setup_camera(get_transform('default'))
+        self.camera = CameraSensor('',
+                                   self.car,
+                                   self.view_width,
+                                   self.view_height,
+                                   self.view_fov)
+        self.camera.setup_camera_rgb(get_transform('default'))
 
         # Init actuators
         if port_rovis_actuator is not None:
@@ -142,93 +142,93 @@ class CarlaClientPygame(object):
 
         # Attach MonoCameras
         if port_rovis_cam_front is not None:
-            self.front_cam_sensor = MonoCameraSensor('CarlaPygame - FrontCamera',
-                                                     self.car,
-                                                     self.view_width,
-                                                     self.view_height,
-                                                     self.view_fov)
-            self.front_cam_sensor.setup_camera(get_transform('front'))
+            self.front_cam_sensor = CameraSensor('CarlaPygame - FrontCamera',
+                                                 self.car,
+                                                 self.view_width,
+                                                 self.view_height,
+                                                 self.view_fov)
+            self.front_cam_sensor.setup_camera_rgb(get_transform('front'))
             # self.front_cam_sensor.init_view()
 
-            self.front_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                     port=port_rovis_cam_front,
-                                                     dt=0.0,
-                                                     cam_sensor=self.front_cam_sensor)
+            self.front_cam_server = CameraServer(ip=ip_rovis,
+                                                 port=port_rovis_cam_front,
+                                                 dt=0.0,
+                                                 cam_sensor=self.front_cam_sensor)
             self.front_cam_server.init_server()
 
         if port_rovis_cam_back is not None:
-            self.back_cam_sensor = MonoCameraSensor('CarlaPygame - BackCamera',
-                                                    self.car,
-                                                    self.view_width,
-                                                    self.view_height,
-                                                    self.view_fov)
-            self.back_cam_sensor.setup_camera(get_transform('back'))
+            self.back_cam_sensor = CameraSensor('CarlaPygame - BackCamera',
+                                                self.car,
+                                                self.view_width,
+                                                self.view_height,
+                                                self.view_fov)
+            self.back_cam_sensor.setup_camera_rgb(get_transform('back'))
             # self.back_cam_sensor.init_view()
 
-            self.back_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                    port=port_rovis_cam_back,
-                                                    dt=0.0,
-                                                    cam_sensor=self.back_cam_sensor)
+            self.back_cam_server = CameraServer(ip=ip_rovis,
+                                                port=port_rovis_cam_back,
+                                                dt=0.0,
+                                                cam_sensor=self.back_cam_sensor)
             self.back_cam_server.init_server()
 
         if port_rovis_cam_left is not None:
-            self.left_cam_sensor = MonoCameraSensor('CarlaPygame - LeftCamera',
-                                                    self.car,
-                                                    self.view_width,
-                                                    self.view_height,
-                                                    self.view_fov)
-            self.left_cam_sensor.setup_camera(get_transform('front_left'))
+            self.left_cam_sensor = CameraSensor('CarlaPygame - LeftCamera',
+                                                self.car,
+                                                self.view_width,
+                                                self.view_height,
+                                                self.view_fov)
+            self.left_cam_sensor.setup_camera_rgb(get_transform('front_left'))
             # self.left_cam_sensor.init_view()
 
-            self.left_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                    port=port_rovis_cam_left,
-                                                    dt=0.0,
-                                                    cam_sensor=self.left_cam_sensor)
+            self.left_cam_server = CameraServer(ip=ip_rovis,
+                                                port=port_rovis_cam_left,
+                                                dt=0.0,
+                                                cam_sensor=self.left_cam_sensor)
             self.left_cam_server.init_server()
 
         if port_rovis_cam_right is not None:
-            self.right_cam_sensor = MonoCameraSensor('CarlaPygame - RightCamera',
+            self.right_cam_sensor = CameraSensor('CarlaPygame - RightCamera',
+                                                 self.car,
+                                                 self.view_width,
+                                                 self.view_height,
+                                                 self.view_fov)
+            self.right_cam_sensor.setup_camera_rgb(get_transform('front_right'))
+            # self.right_cam_sensor.init_view()
+
+            self.right_cam_server = CameraServer(ip=ip_rovis,
+                                                 port=port_rovis_cam_right,
+                                                 dt=0.0,
+                                                 cam_sensor=self.right_cam_sensor)
+            self.right_cam_server.init_server()
+
+        if port_rovis_cam_back_left is not None:
+            self.back_left_cam_sensor = CameraSensor('CarlaPygame - BackLeftCamera',
                                                      self.car,
                                                      self.view_width,
                                                      self.view_height,
                                                      self.view_fov)
-            self.right_cam_sensor.setup_camera(get_transform('front_right'))
-            # self.right_cam_sensor.init_view()
-
-            self.right_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                     port=port_rovis_cam_right,
-                                                     dt=0.0,
-                                                     cam_sensor=self.right_cam_sensor)
-            self.right_cam_server.init_server()
-
-        if port_rovis_cam_back_left is not None:
-            self.back_left_cam_sensor = MonoCameraSensor('CarlaPygame - BackLeftCamera',
-                                                         self.car,
-                                                         self.view_width,
-                                                         self.view_height,
-                                                         self.view_fov)
-            self.back_left_cam_sensor.setup_camera(get_transform('back_left'))
+            self.back_left_cam_sensor.setup_camera_rgb(get_transform('back_left'))
             # self.back_left_cam_sensor.init_view()
 
-            self.back_left_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                         port=port_rovis_cam_back_left,
-                                                         dt=0.0,
-                                                         cam_sensor=self.back_left_cam_sensor)
+            self.back_left_cam_server = CameraServer(ip=ip_rovis,
+                                                     port=port_rovis_cam_back_left,
+                                                     dt=0.0,
+                                                     cam_sensor=self.back_left_cam_sensor)
             self.back_left_cam_server.init_server()
 
         if port_rovis_cam_back_right is not None:
-            self.back_right_cam_sensor = MonoCameraSensor('CarlaPygame - BackRightCamera',
-                                                          self.car,
-                                                          self.view_width,
-                                                          self.view_height,
-                                                          self.view_fov)
-            self.back_right_cam_sensor.setup_camera(get_transform('back_right'))
+            self.back_right_cam_sensor = CameraSensor('CarlaPygame - BackRightCamera',
+                                                      self.car,
+                                                      self.view_width,
+                                                      self.view_height,
+                                                      self.view_fov)
+            self.back_right_cam_sensor.setup_camera_rgb(get_transform('back_right'))
             # self.back_right_cam_sensor.init_view()
 
-            self.back_right_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                          port=port_rovis_cam_back_right,
-                                                          dt=0.0,
-                                                          cam_sensor=self.back_right_cam_sensor)
+            self.back_right_cam_server = CameraServer(ip=ip_rovis,
+                                                      port=port_rovis_cam_back_right,
+                                                      dt=0.0,
+                                                      cam_sensor=self.back_right_cam_sensor)
             self.back_right_cam_server.init_server()
 
         # Attach SemSeg Camera
@@ -485,7 +485,7 @@ class CarlaClientPygame(object):
         Transforms image from camera sensor and blits it to main pygame display.
         It also displays the FPS.
         """
-        array = self.camera.process_image()
+        array = self.camera.process_img_rgb()
         if array is not None:
             array = array[:, :, ::-1]
             surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))

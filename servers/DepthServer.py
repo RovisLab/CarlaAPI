@@ -99,8 +99,7 @@ class DepthSensor(object):
     def camera_callback(weak_ref, image):
         self = weak_ref()
         # print("camera callback, ", self._parent)
-        # self.image = image
-        self.image = image
+        self.img_rgb = image
 
     def destroy(self):
         self.sensor.destroy()
@@ -141,7 +140,7 @@ class DepthServer(object):
     def do_send(self):
         while not self.is_terminated:
             if self.depth_sensor is not None:
-                raw, depth = self.depth_sensor.process_image()
+                raw, depth = self.depth_sensor.process_img_rgb()
 
                 # cv2.imshow("Test_raw", raw)
                 # cv2.imshow("Test_depth", depth)

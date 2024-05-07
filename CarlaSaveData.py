@@ -8,7 +8,7 @@ import numpy as np
 import psutil
 
 from clients.VehicleActuatorClient import VehicleActuatorClient
-from servers.MonoCameraServer import MonoCameraServer, MonoCameraSensor
+from servers.CameraServer import CameraServer, CameraSensor
 from servers.SemSegCameraServer import SemSegCameraServer, SemSegCameraSensor
 from servers.VehicleStateEstimationServer import StateMeasurementServer
 from servers.ImuServer import IMUServer, IMUSensor
@@ -42,7 +42,7 @@ from depend.RovisDatabaseFormat import RovisDataBase
 def main():
     # start_carla(CARLA_EXE_PATH)
 
-    client = CarlaSaveData(db_path=r'C:\dev\Databases\Carla\SemSegBig')
+    client = CarlaSaveData(db_path=r'C:\data\Carla\tmp')
     try:
         threading.Thread(target=client.game_loop).start()
         time.sleep(2)
@@ -78,7 +78,7 @@ class CarlaSaveData(object):
         self.db = None
 
         # Check map
-        town_name = 'Town03'  # Town03 Town05
+        town_name = 'Town04'  # Town03 Town05
         if self.world.get_map().name != town_name:
             if town_name in [elem.split('/')[-1] for elem in self.client.get_available_maps()]:
                 self.client.set_timeout(999)
@@ -102,6 +102,13 @@ class CarlaSaveData(object):
             orientation = carla.Rotation(0, -90, 0),
             spawn_point = carla.Transform(position, orientation)
 
+        settings = self.world.get_settings()
+        settings.synchronous_mode = True  # Enables synchronous mode
+        target_fps = 30
+        target_freq = 1.0 / target_fps
+        settings.fixed_delta_seconds = target_freq
+        self.world.apply_settings(settings)
+
         # Instantiate car
         bp = self.world.get_blueprint_library().filter('vehicle.Seat.Leon')[0]
         self.car = self.world.spawn_actor(bp, spawn_point)
@@ -117,66 +124,66 @@ class CarlaSaveData(object):
 
         self.m_cams = {item: None for item in self.cam_order}
         # Attach MonoCameras ###########################################################################################
-        self.m_cams['front'] = MonoCameraSensor('{} - CameraFront'.format(self.name), self.car,
-                                                self.view_width, self.view_height, self.view_fov)
-        self.m_cams['front'].setup_camera(get_transform('front'))
+        self.m_cams['front'] = CameraSensor('{} - CameraFront'.format(self.name), self.car,
+                                            self.view_width, self.view_height, self.view_fov)
+        self.m_cams['front'].setup_camera_rgb(get_transform('front'))
         self.m_cams['front'].init_view()
         
-        self.m_cams['back'] = MonoCameraSensor('{} - CameraBack'.format(self.name), self.car,
-                                               self.view_width, self.view_height, self.view_fov)
-        self.m_cams['back'].setup_camera(get_transform('back'))
+        self.m_cams['back'] = CameraSensor('{} - CameraBack'.format(self.name), self.car,
+                                           self.view_width, self.view_height, self.view_fov)
+        self.m_cams['back'].setup_camera_rgb(get_transform('back'))
         # self.m_cams['cam_back'].init_view()
         
-        self.m_cams['left'] = MonoCameraSensor('{} - CameraLeft'.format(self.name), self.car,
-                                               self.view_width, self.view_height, self.view_fov)
-        self.m_cams['left'].setup_camera(get_transform('front_left'))
+        self.m_cams['left'] = CameraSensor('{} - CameraLeft'.format(self.name), self.car,
+                                           self.view_width, self.view_height, self.view_fov)
+        self.m_cams['left'].setup_camera_rgb(get_transform('front_left'))
         # self.m_cams['cam_left'].init_view()
         
-        self.m_cams['right'] = MonoCameraSensor('{} - CameraRight'.format(self.name), self.car,
-                                                self.view_width, self.view_height, self.view_fov)
-        self.m_cams['right'].setup_camera(get_transform('front_right'))
+        self.m_cams['right'] = CameraSensor('{} - CameraRight'.format(self.name), self.car,
+                                            self.view_width, self.view_height, self.view_fov)
+        self.m_cams['right'].setup_camera_rgb(get_transform('front_right'))
         # self.m_cams['cam_right'].init_view()
         
-        self.m_cams['back_left'] = MonoCameraSensor('{} - CameraBackLeft'.format(self.name), self.car,
-                                                    self.view_width, self.view_height, self.view_fov)
-        self.m_cams['back_left'].setup_camera(get_transform('back_left'))
+        self.m_cams['back_left'] = CameraSensor('{} - CameraBackLeft'.format(self.name), self.car,
+                                                self.view_width, self.view_height, self.view_fov)
+        self.m_cams['back_left'].setup_camera_rgb(get_transform('back_left'))
         # self.m_cams['back_left'].init_view()
         
-        self.m_cams['back_right'] = MonoCameraSensor('{} - CameraBackRight'.format(self.name), self.car,
-                                                     self.view_width, self.view_height, self.view_fov)
-        self.m_cams['back_right'].setup_camera(get_transform('back_right'))
+        self.m_cams['back_right'] = CameraSensor('{} - CameraBackRight'.format(self.name), self.car,
+                                                 self.view_width, self.view_height, self.view_fov)
+        self.m_cams['back_right'].setup_camera_rgb(get_transform('back_right'))
         # self.m_cams['back_right'].init_view()
 
         self.semseg = {item: None for item in self.cam_order}
         # Attach SemSeg Cameras ########################################################################################
         self.semseg['front'] = SemSegCameraSensor('{} - SemSegFront'.format(self.name), self.car,
                                                   self.view_width, self.view_height, self.view_fov)
-        self.semseg['front'].setup_camera(get_transform('front'))
+        self.semseg['front'].setup_camera_rgb(get_transform('front'))
         # self.semseg['front'].init_view()
 
         self.semseg['back'] = SemSegCameraSensor('{} - SemSegBack'.format(self.name), self.car,
                                                  self.view_width, self.view_height, self.view_fov)
-        self.semseg['back'].setup_camera(get_transform('back'))
+        self.semseg['back'].setup_camera_rgb(get_transform('back'))
         # self.semseg['back'].init_view()
 
         self.semseg['left'] = SemSegCameraSensor('{} - SemSegLeft'.format(self.name), self.car,
                                                  self.view_width, self.view_height, self.view_fov)
-        self.semseg['left'].setup_camera(get_transform('front_left'))
+        self.semseg['left'].setup_camera_rgb(get_transform('front_left'))
         # self.semseg['left'].init_view()
 
         self.semseg['right'] = SemSegCameraSensor('{} - SemSegRight'.format(self.name), self.car,
                                                   self.view_width, self.view_height, self.view_fov)
-        self.semseg['right'].setup_camera(get_transform('front_right'))
+        self.semseg['right'].setup_camera_rgb(get_transform('front_right'))
         # self.semseg['right'].init_view()
 
         self.semseg['back_left'] = SemSegCameraSensor('{} - SemSegBackLeft'.format(self.name), self.car,
                                                       self.view_width, self.view_height, self.view_fov)
-        self.semseg['back_left'].setup_camera(get_transform('back_left'))
+        self.semseg['back_left'].setup_camera_rgb(get_transform('back_left'))
         # self.semseg['back_left'].init_view()
 
         self.semseg['back_right'] = SemSegCameraSensor('{} - SemSegBackRight'.format(self.name), self.car,
                                                        self.view_width, self.view_height, self.view_fov)
-        self.semseg['back_right'].setup_camera(get_transform('back_right'))
+        self.semseg['back_right'].setup_camera_rgb(get_transform('back_right'))
         # self.semseg['back_right'].init_view()
 
         self.init_db()
@@ -228,6 +235,13 @@ class CarlaSaveData(object):
         while not self.is_terminated:
             self.world.tick()
 
+            # Do not stop at traffic lights
+            if self.car.is_at_traffic_light():
+                traffic_light = self.car.get_traffic_light()
+                if traffic_light.get_state() == carla.TrafficLightState.Red:
+                    # world.hud.notification("Traffic light changed! Good to go!")
+                    traffic_light.set_state(carla.TrafficLightState.Green)
+
             # Capture flag for cameras. Without this, the image will not update
             for key in self.cam_order:
                 self.semseg[key].capture = True
@@ -255,8 +269,8 @@ class CarlaSaveData(object):
         semseg_images = []
 
         for key in self.cam_order:
-            rgb_images.append(self.m_cams[key].process_image())
-            semseg_images.append(self.semseg[key].process_image())
+            rgb_images.append(self.m_cams[key].process_img_rgb())
+            semseg_images.append(self.semseg[key].process_img_rgb())
 
         if any(elem is None for elem in rgb_images) or any(elem is None for elem in semseg_images):
             self.signal_save = False

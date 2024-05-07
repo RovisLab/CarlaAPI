@@ -92,7 +92,7 @@ class SemSegCameraSensor(object):
         cy = self.view_height / 2  # Center Y
 
         mat = [[f_length, 0,        cx],
-               [0,        f_length, xy],
+               [0,        f_length, cy],
                [0,        0,        1]]
 
         return mat
@@ -135,7 +135,7 @@ class SemSegCameraSensor(object):
         # print("camera callback, ", self._parent)
         # self.image = image
         if self.capture:
-            self.image = image
+            self.img_rgb = image
             self.capture = False
 
     def destroy(self):
@@ -181,7 +181,7 @@ class SemSegCameraServer(object):
     def do_send(self):
         while not self.is_terminated:
             if self.cam_sensor is not None:
-                data = self.cam_sensor.process_image()
+                data = self.cam_sensor.process_img_rgb()
 
                 if data is not None:
                     # View data

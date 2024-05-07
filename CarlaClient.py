@@ -8,7 +8,7 @@ import numpy as np
 import time
 
 from clients.VehicleActuatorClient import VehicleActuatorClient
-from servers.MonoCameraServer import MonoCameraServer, MonoCameraSensor
+from servers.CameraServer import CameraServer, CameraSensor
 from servers.SemSegCameraServer import SemSegCameraServer, SemSegCameraSensor
 from servers.VehicleStateEstimationServer import StateMeasurementServer
 from servers.ImuServer import IMUServer, IMUSensor
@@ -59,8 +59,8 @@ class CarlaClient(object):
                  port_rovis_lidar=None,
                  port_rovis_radar=None,
                  target_fps=30,
-                 view_width=940,
-                 view_height=480,
+                 view_width=640,
+                 view_height=360,
                  view_fov=90):
 
         self.start_time = time.time()
@@ -110,12 +110,12 @@ class CarlaClient(object):
 
         # Setup camera
         if view_cam:
-            self.camera = MonoCameraSensor('{}'.format(self.name),
-                                           self.car,
-                                           self.view_width,
-                                           self.view_height,
-                                           self.view_fov)
-            self.camera.setup_camera(get_transform('default'))
+            self.camera = CameraSensor('{}'.format(self.name),
+                                       self.car,
+                                       self.view_width,
+                                       self.view_height,
+                                       self.view_fov)
+            self.camera.setup_cameras(get_transform('default'))
 
         # Init actuators server
         if port_rovis_actuator is not None:
@@ -154,93 +154,93 @@ class CarlaClient(object):
 
         # Attach MonoCameras
         if port_rovis_cam_front is not None:
-            self.front_cam_sensor = MonoCameraSensor('{} - FrontCamera'.format(self.name),
-                                                     self.car,
-                                                     self.view_width,
-                                                     self.view_height,
-                                                     self.view_fov)
-            self.front_cam_sensor.setup_camera(get_transform('front'))
+            self.front_cam_sensor = CameraSensor('{} - FrontCamera'.format(self.name),
+                                                 self.car,
+                                                 self.view_width,
+                                                 self.view_height,
+                                                 self.view_fov)
+            self.front_cam_sensor.setup_cameras(get_transform('front'))
             # self.front_cam_sensor.init_view()
 
-            self.front_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                     port=port_rovis_cam_front,
-                                                     dt=0.0,
-                                                     cam_sensor=self.front_cam_sensor)
+            self.front_cam_server = CameraServer(ip=ip_rovis,
+                                                 port=port_rovis_cam_front,
+                                                 dt=0.0,
+                                                 cam_sensor=self.front_cam_sensor)
             self.front_cam_server.init_server()
 
         if port_rovis_cam_back is not None:
-            self.back_cam_sensor = MonoCameraSensor('{} - BackCamera'.format(self.name),
-                                                    self.car,
-                                                    self.view_width,
-                                                    self.view_height,
-                                                    self.view_fov)
-            self.back_cam_sensor.setup_camera(get_transform('back'))
+            self.back_cam_sensor = CameraSensor('{} - BackCamera'.format(self.name),
+                                                self.car,
+                                                self.view_width,
+                                                self.view_height,
+                                                self.view_fov)
+            self.back_cam_sensor.setup_camera_rgb(get_transform('back'))
             # self.back_cam_sensor.init_view()
 
-            self.back_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                    port=port_rovis_cam_back,
-                                                    dt=0.0,
-                                                    cam_sensor=self.back_cam_sensor)
+            self.back_cam_server = CameraServer(ip=ip_rovis,
+                                                port=port_rovis_cam_back,
+                                                dt=0.0,
+                                                cam_sensor=self.back_cam_sensor)
             self.back_cam_server.init_server()
 
         if port_rovis_cam_left is not None:
-            self.left_cam_sensor = MonoCameraSensor('{} - LeftCamera'.format(self.name),
-                                                    self.car,
-                                                    self.view_width,
-                                                    self.view_height,
-                                                    self.view_fov)
-            self.left_cam_sensor.setup_camera(get_transform('front_left'))
+            self.left_cam_sensor = CameraSensor('{} - LeftCamera'.format(self.name),
+                                                self.car,
+                                                self.view_width,
+                                                self.view_height,
+                                                self.view_fov)
+            self.left_cam_sensor.setup_camera_rgb(get_transform('front_left'))
             # self.left_cam_sensor.init_view()
 
-            self.left_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                    port=port_rovis_cam_left,
-                                                    dt=0.0,
-                                                    cam_sensor=self.left_cam_sensor)
+            self.left_cam_server = CameraServer(ip=ip_rovis,
+                                                port=port_rovis_cam_left,
+                                                dt=0.0,
+                                                cam_sensor=self.left_cam_sensor)
             self.left_cam_server.init_server()
 
         if port_rovis_cam_right is not None:
-            self.right_cam_sensor = MonoCameraSensor('{} - RightCamera'.format(self.name),
+            self.right_cam_sensor = CameraSensor('{} - RightCamera'.format(self.name),
+                                                 self.car,
+                                                 self.view_width,
+                                                 self.view_height,
+                                                 self.view_fov)
+            self.right_cam_sensor.setup_camera_rgb(get_transform('front_right'))
+            # self.right_cam_sensor.init_view()
+
+            self.right_cam_server = CameraServer(ip=ip_rovis,
+                                                 port=port_rovis_cam_right,
+                                                 dt=0.0,
+                                                 cam_sensor=self.right_cam_sensor)
+            self.right_cam_server.init_server()
+
+        if port_rovis_cam_back_left is not None:
+            self.back_left_cam_sensor = CameraSensor('{} - BackLeftCamera'.format(self.name),
                                                      self.car,
                                                      self.view_width,
                                                      self.view_height,
                                                      self.view_fov)
-            self.right_cam_sensor.setup_camera(get_transform('front_right'))
-            # self.right_cam_sensor.init_view()
-
-            self.right_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                     port=port_rovis_cam_right,
-                                                     dt=0.0,
-                                                     cam_sensor=self.right_cam_sensor)
-            self.right_cam_server.init_server()
-
-        if port_rovis_cam_back_left is not None:
-            self.back_left_cam_sensor = MonoCameraSensor('{} - BackLeftCamera'.format(self.name),
-                                                         self.car,
-                                                         self.view_width,
-                                                         self.view_height,
-                                                         self.view_fov)
-            self.back_left_cam_sensor.setup_camera(get_transform('back_left'))
+            self.back_left_cam_sensor.setup_camera_rgb(get_transform('back_left'))
             # self.back_left_cam_sensor.init_view()
 
-            self.back_left_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                         port=port_rovis_cam_back_left,
-                                                         dt=0.0,
-                                                         cam_sensor=self.back_left_cam_sensor)
+            self.back_left_cam_server = CameraServer(ip=ip_rovis,
+                                                     port=port_rovis_cam_back_left,
+                                                     dt=0.0,
+                                                     cam_sensor=self.back_left_cam_sensor)
             self.back_left_cam_server.init_server()
 
         if port_rovis_cam_back_right is not None:
-            self.back_right_cam_sensor = MonoCameraSensor('{} - BackRightCamera'.format(self.name),
-                                                          self.car,
-                                                          self.view_width,
-                                                          self.view_height,
-                                                          self.view_fov)
-            self.back_right_cam_sensor.setup_camera(get_transform('back_right'))
+            self.back_right_cam_sensor = CameraSensor('{} - BackRightCamera'.format(self.name),
+                                                      self.car,
+                                                      self.view_width,
+                                                      self.view_height,
+                                                      self.view_fov)
+            self.back_right_cam_sensor.setup_camera_rgb(get_transform('back_right'))
             # self.back_right_cam_sensor.init_view()
 
-            self.back_right_cam_server = MonoCameraServer(ip=ip_rovis,
-                                                          port=port_rovis_cam_back_right,
-                                                          dt=0.0,
-                                                          cam_sensor=self.back_right_cam_sensor)
+            self.back_right_cam_server = CameraServer(ip=ip_rovis,
+                                                      port=port_rovis_cam_back_right,
+                                                      dt=0.0,
+                                                      cam_sensor=self.back_right_cam_sensor)
             self.back_right_cam_server.init_server()
 
         # Attach SemSeg Camera
@@ -402,8 +402,15 @@ class CarlaClient(object):
             self.camera.init_view()
 
         while not self.is_terminated:
-
             self.world.tick()
+
+            # Do not stop at traffic lights
+            if self.car.is_at_traffic_light():
+                traffic_light = self.car.get_traffic_light()
+                if traffic_light.get_state() == carla.TrafficLightState.Red:
+                    # world.hud.notification("Traffic light changed! Good to go!")
+                    traffic_light.set_state(carla.TrafficLightState.Green)
+
             # Capture flag for cameras. Without this, the image will not update
             if self.view_cam:
                 self.camera.capture = True

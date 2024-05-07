@@ -71,7 +71,7 @@ if __name__ == "__main__":
                          orientation=carla.Rotation(0, -90, 0),
                          random_spawn=False,  # Get a random spawn point or spawn at the position above
                          vehicle_type='vehicle.Seat.Leon',  # Vehicle type
-                         control='rovis',  # auto / rovis
+                         control='auto',  # auto / rovis
                          ip_rovis='127.0.0.1',
                          port_rovis_actuator=2003,            # 2003
                          port_rovis_cam_front=2004,           # 2004
@@ -87,13 +87,13 @@ if __name__ == "__main__":
                          port_rovis_semseg_back_left=None,    # 2014
                          port_rovis_semseg_back_right=None,   # 2015
                          port_rovis_state_measurement=2016,   # 2016
-                         port_rovis_imu=None,                 # 2017
+                         port_rovis_imu=2017,                 # 2017
                          port_rovis_depth=None,               # 2020
                          port_rovis_lidar=None,               # 2021
                          port_rovis_radar=None,               # 2022
                          target_fps=30,
                          view_width=640,
-                         view_height=480,
+                         view_height=360,
                          view_fov=90)
 
     # car_02 = CarlaClient(name='Car Two',  # Name of the client
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     #                      port_rovis_radar=None,
     #                      target_fps=30,
     #                      view_width=640,
-    #                      view_height=480,
+    #                      view_height=360,
     #                      view_fov=90)
 
     try:
