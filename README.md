@@ -32,7 +32,7 @@ To see if the config file is valid, you can run `config_utils.py`.
 
 ## Running Carla:
 
-Having a valid config file, write its path in `Run_Carla.py` script and then run it.
+Run `Run_Carla.py` with the path towards a valid config file as parameter.
 
 ## Stopping Carla:
 

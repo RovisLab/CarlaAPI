@@ -74,13 +74,5 @@ def get_intrinsics(width, height, fov):
     return mat
 
 
-CARLA_OBJECT_TYPES = {  # label - CarlaLabel, cls - sem_cls, tag - for actor filtering
-    'pedestrians': {'label': carla.CityObjectLabel.Pedestrians, 'cls': 4, 'tag': 'walker.*'},
-    'vehicles': {'label': carla.CityObjectLabel.Vehicles, 'cls': 10, 'tag': 'vehicle.*'},
-    'signs': {'label': carla.CityObjectLabel.TrafficSigns, 'cls': 12, 'tag': 'vehicle.*'},
-    'lights': {'label': carla.CityObjectLabel.TrafficLight, 'cls': 18, 'tag': 'vehicle.*'},
-}
-
-
 if __name__ == '__main__':
     print('NOT runnable. Check \'Run_Carla.py\'')

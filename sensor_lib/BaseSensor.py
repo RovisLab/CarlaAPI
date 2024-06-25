@@ -59,6 +59,7 @@ class BaseSensor(object):
         self.event = None  # Enet event
         self.service_thread = threading.Thread()
         self.sending_thread = threading.Thread()
+        self.connected = False  # True if connected
         self.terminate_server = False  # Bool for server termination
 
     # ==================== General sensor methods ====================
@@ -81,6 +82,8 @@ class BaseSensor(object):
                 self.sensor_transform = get_transform(self.args[key])
             elif key == 'view':
                 self.view = self.args[key]
+            elif key == 'view_dt':
+                self.viewer_delay = self.args[key]
 
     # Setup sensor
     def setup(self):
@@ -111,7 +114,7 @@ class BaseSensor(object):
                 pass
 
         # Check threads
-        time.sleep(self.viewer_delay / 1000 * 10)  # 10 times viewer_delay in seconds
+        time.sleep(self.viewer_delay / 1000 + 0.1)
         if self.view and self.viewer_thread.is_alive():
             print(' - {}:{} - Viewer alive!'.format(self.parent_name, self.name))
         if self.send:
@@ -154,10 +157,11 @@ class BaseSensor(object):
 
             if self.event.type == enet.EVENT_TYPE_CONNECT:
                 print(' - {}:{} connected to {}.'.format(self.parent_name, self.name, self.event.peer.address))
+                self.connected = True
 
             elif self.event.type == enet.EVENT_TYPE_DISCONNECT:
-                print(' - {}:{} disconnected from {}.'.format(self.parent_name, self.name, self.event.peer.address))
-                self.terminate_server = True
+                # print(' - {}:{} disconnected from {}.'.format(self.parent_name, self.name, self.event.peer.address))
+                self.connected = False
             self.host.flush()
             time.sleep(0.01)
         self.host = None
@@ -168,7 +172,7 @@ class BaseSensor(object):
 
     # Check server state. Returns True if server is alright
     def check_server(self):
-        return not self.terminate_server
+        return self.connected
 
     # Encode data for rovis transfer
     def encode_data_transfer(self):
@@ -178,6 +182,11 @@ class BaseSensor(object):
     # Send data to rovis
     def do_send(self):
         while not self.terminate_server:
+            # Pause sending data if not connected
+            if not self.connected:
+                time.sleep(0.1)
+                continue
+
             encoded_data = self.encode_data_transfer()
 
             if encoded_data is not None:
@@ -192,7 +201,8 @@ class BaseSensor(object):
                 self.send_bool = False
 
             elif self.event.type == enet.EVENT_TYPE_DISCONNECT:
-                break
+                self.connected = False
+                continue
 
             # Wait for signal
             while not self.send_bool:

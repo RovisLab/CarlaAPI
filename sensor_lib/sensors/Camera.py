@@ -69,19 +69,20 @@ class CameraSensor(BaseSensor):
         while not self.stop_view and self.sensor is not None:
             image = self.get_data()
 
-            key = None
             if image is not None:
                 cv2.imshow(window_name, image)
-                key = cv2.waitKey(self.viewer_delay)
+                key = cv2.waitKey(1)
 
-            if key is not None and key != -1:
-                if key == 27:  # ESC - close everything
-                    self.terminate_signal.emit()
-                    self.stop_view = True
-                elif key == ord('q'):  # Close just the viewer
-                    self.stop_view = True
-                elif key == ord(' '):  # Print transform of vehicle
-                    print(' - Vehicle {} transform: {}'.format(self.parent_name, self._parent.get_transform()))
+                if key is not None and key != -1:
+                    if key == 27:  # ESC - close everything
+                        self.terminate_signal.emit()
+                        self.stop_view = True
+                    elif key == ord('q'):  # Close just the viewer
+                        self.stop_view = True
+                    elif key == ord(' '):  # Print transform of vehicle
+                        print(' - Vehicle {} transform: {}'.format(self.parent_name, self._parent.get_transform()))
+
+                time.sleep(self.viewer_delay / 1000)
 
         time.sleep(0.001)
         if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) > 1:

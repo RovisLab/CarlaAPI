@@ -40,7 +40,7 @@ class VehicleStateEstimation(BaseSensor):
         # Rovis direction = West
         actor_yaw = tr.rotation.yaw  # degrees
         actor_yaw = actor_yaw * math.pi / 180  # rad
-        heading = math.pi / 2 - actor_yaw
+        heading = 2 * math.pi - actor_yaw
 
         if heading < -math.pi:
             heading = 2 * math.pi + heading
@@ -51,18 +51,11 @@ class VehicleStateEstimation(BaseSensor):
         velocity = R @ np.array([vel.x, vel.y, vel.z])
         speed = math.sqrt(velocity[0] ** 2 + velocity[1] ** 2 + velocity[2] ** 2)
 
-        _string = ""
-        _string += str('%0.4f' % position[0]) + ";"  # Get x
-        _string += str('%0.4f' % position[1]) + ";"  # Get y
-        if speed != 0:
-            _string += str('%.6f' % speed) + ";"
-        else:
-            _string += "0;"
+        # Get steering TODO
+        steering = 0
 
-        _string += str('%.6f' % heading) + ";"  # Get yaw angle
-        _string += str('%.6f' % 0) + ";"  # TODO: Steering angle
-
-        return _string + "/" + "&2&1;&"
+        # [x, y, speed, heading, steering]
+        return [position[0], position[1], speed, heading, steering]
 
     @staticmethod
     def sensor_callback(weak_ref, data):
@@ -76,11 +69,19 @@ class VehicleStateEstimation(BaseSensor):
 
     # ==================== Server methods ====================
     def encode_data_transfer(self):
-        data = self.get_data()
+        data = self.get_data()  # [x, y, speed, heading, steering]
 
         if data is not None:
             veh_state_data = "{\"CarData\":\""
-            veh_state_data += "{}".format(data)
+            veh_state_data += str('%0.4f' % data[0]) + ";"
+            veh_state_data += str('%0.4f' % data[1]) + ";"
+            if data[2] != 0:
+                veh_state_data += str('%.6f' % data[2]) + ";"
+            else:
+                veh_state_data += "0;"
+            veh_state_data += str('%.6f' % data[3]) + ";"
+            veh_state_data += str('%.6f' % data[4]) + ";"
+            veh_state_data += "/" + "&2&1;&"
             veh_state_data += "\"}"
 
             return bytes(str(veh_state_data), 'utf8')
@@ -90,15 +91,13 @@ class VehicleStateEstimation(BaseSensor):
     def pack_data(self, ts_stop, frame_id):
         data = self.get_data()
 
-        # TODO get this vars from data
         packed_data = {
-            's_var_0': float,
-            's_var_1': float,
-            's_var_2': float,
-            's_var_3': float
+            's_var_0': str('%0.4f' % data[0]),
+            's_var_1': str('%0.4f' % data[1]),
+            's_var_2': str('%.6f' % data[2]) if data[2] != 0 else "0;",
+            's_var_3': str('%.6f' % data[3])
         }
-        return {}
-        # return packed_data
+        return packed_data
 
 
 if __name__ == '__main__':

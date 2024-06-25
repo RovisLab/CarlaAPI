@@ -92,7 +92,7 @@ class CarlaClient(object):
         self.setup_sensors()
 
         # Setup camera for manual control
-        if self.args['control'] == 'manual':
+        if self.args['control'] == 'rovis':  # REMAKE
             self.pyg_control_img = cv2.imread('include/pygame_controls.png')
 
     # Used for synchronisation with the main game loop
@@ -134,7 +134,7 @@ class CarlaClient(object):
         # Setup pygame
         pyg_clock = None
         pyg_display = None
-        if self.args['control'] == 'manual':
+        if self.args['control'] == 'rovis':  # REMAKE
             pygame.init()
             pygame.font.init()
             pyg_shape = self.pyg_control_img.shape
@@ -157,6 +157,10 @@ class CarlaClient(object):
             # Signal sensors to send data
             self.sensors.send_data()
 
+            # Control traffic lights
+            if self.args['trl_control']:
+                self.traffic_light_control()
+
             # Draw radar on the world
             # self.radar_sensor.draw_radar(self.world)
 
@@ -164,6 +168,13 @@ class CarlaClient(object):
             control = self.args['control']
             if control == 'rovis':
                 self.rovis_control(self.actor)
+                ########## REMOVE
+                try:
+                    pyg_clock.tick(conf.General['fps'])
+                    self.manual_control(self.actor)
+                except pygame.error:
+                    pass
+                ###########
             elif control == 'auto':
                 self.carla_ai_control(self.actor)
             elif control == 'manual':
@@ -177,7 +188,7 @@ class CarlaClient(object):
 
             # self.custom_viewer()
 
-            if self.args['control'] == 'manual':
+            if self.args['control'] == 'rovis':  # REMAKE
                 try:
                     self.render(pyg_display, fps=pyg_clock.get_fps())
                     pygame.display.flip()
@@ -192,18 +203,18 @@ class CarlaClient(object):
 
     # Custom viewer
     def custom_viewer(self):
-        # Combines 2D with Camera
-        if 'CameraFront' not in self.sensors.keys() or 'Det2DFront' not in self.sensors.keys():
+        # Combines 3D with Camera
+        if 'CamFront' not in self.sensors.keys() or 'ObjDet3D' not in self.sensors.keys():
             return
 
-        image = self.sensors.get_data('CameraFront')
-        bboxes = self.sensors.get_data('Det2DFront', 'image')
+        image = self.sensors.get_data('CamFront')
+        bboxes = self.sensors.get_data('ObjDet3D', 'image')
 
         if image is not None:
-            image = self.sensors.get('Det2DFront').draw_bboxes(bboxes, image.copy())
+            image = self.sensors.get('ObjDet3D').draw_bboxes(bboxes, image.copy())
 
         if image is not None:
-            cv2.imshow('Custom_viewer', image)
+            cv2.imshow('TEST', image)
             cv2.waitKey(1)
 
     # Update capture flags for sensors
@@ -228,14 +239,15 @@ class CarlaClient(object):
         self.sensors.get_data_to_save(ts_stop, frame_id)
 
     # Slot that is called when data is ready. Emits "data_is_ready_signal" when done for CarlaClients.
-    # def on_data_collected(self, data_collected):
-    #     self.data_is_ready_signal.emit(self.name, data_collected)
     def on_data_collected(self, name, data_collected):
         self.data_is_ready_signal.emit(name, data_collected)
 
     # Control handler for 'rovis'
     def rovis_control(self, car):
-        control = car.get_control()
+        try:
+            control = car.get_control()
+        except RuntimeError:  # destroyed actor
+            return
 
         throttle, steering = self.sensors.get_data(self.actuator_name)
 
@@ -248,8 +260,6 @@ class CarlaClient(object):
             control.reverse = False
 
         car.apply_control(control)
-
-        return False
 
     # Control handler for 'auto'
     def carla_ai_control(self, car):
@@ -265,7 +275,7 @@ class CarlaClient(object):
             pygame.display.quit()
             pygame.quit()
             self.on_terminate()
-            return True
+            return
 
         control = car.get_control()
 
@@ -286,7 +296,12 @@ class CarlaClient(object):
         control.hand_brake = keys[K_SPACE]
 
         car.apply_control(control)
-        return False
+
+    def traffic_light_control(self):
+        # If the actor is at a traffic light, make it green
+        # Works only if the actor is the first car at the traffic light
+        if self.actor.is_at_traffic_light():
+            self.actor.get_traffic_light().set_state(carla.TrafficLightState.Green)
 
     # Set advanced physics controls for the current actor
     def physics_control(self):

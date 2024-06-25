@@ -6,6 +6,7 @@ import numpy as np
 import math
 import cv2
 import weakref
+from scipy.spatial.transform import Rotation
 
 import config_utils as conf
 from sensor_lib.BaseSensor import BaseSensor
@@ -29,10 +30,10 @@ class ImuSensor(BaseSensor):
     # ==================== General sensor methods ====================
     def setup(self):
         world = self._parent.get_world()
-        radar_bp = world.get_blueprint_library().find('sensor.other.imu')
+        imu_bp = world.get_blueprint_library().find('sensor.other.imu')
 
         self.sensor = world.spawn_actor(
-            radar_bp, self.sensor_transform, attach_to=self._parent
+            imu_bp, self.sensor_transform, attach_to=self._parent
         )
         weak_self = weakref.ref(self)
         self.sensor.listen(
@@ -126,7 +127,7 @@ class ImuSensor(BaseSensor):
 
         _string = ""
         _string += "{}:{};".format('pose', self._parent.get_location())
-        _string += "{}:{};".format('heading', math.degrees(heading))
+        _string += "{}:{};".format('heading', math.degrees(self.data.compass))
         _string += "{}:{};".format('velocity', velocity)
         _string += "{}:{:.3f};".format('speed', speed)
 

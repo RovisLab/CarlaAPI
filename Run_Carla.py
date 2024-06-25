@@ -3,6 +3,7 @@ import sys
 import glob
 import threading
 import subprocess
+import argparse
 import psutil
 import time
 
@@ -93,10 +94,15 @@ def main():
 
 
 if __name__ == "__main__":
-    config_path = r"configs/scenario_custom.conf"
+    parser = argparse.ArgumentParser(description='Carla Rovis API 2.0')
+
+    default_path = r'configs/scenario_custom.conf'
+
+    parser.add_argument('conf', nargs='?', help='Path to config file.',
+                        default=default_path)
 
     # Configuration setup
-    if not conf.config_setup(config_path):
+    if not conf.config_setup(parser.parse_args().conf):
         print(' # Problem with the configuration setup.')
         exit(-2)
 

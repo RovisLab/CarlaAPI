@@ -40,19 +40,19 @@ def check_config():
     client_key_type = {  # Each client
         'position': tuple, 'orientation': tuple, 'random_spawn': bool,
         'actor_type': str, 'control': str, 'cam_width': int,
-        'cam_height': int, 'cam_fov': int, 'Comm': libconf.AttrDict
+        'cam_height': int, 'cam_fov': int, 'Comm': libconf.AttrDict,
+        'trl_control': bool
     }
     comm_key_type = {
         'type': str, 'pos': str, 'width': int, 'height': int,
         'fov': int, 'view': bool, 'port': int, 'send': bool,
         'gamma': int, 'range': int, 'channels': int, 'pps': int,
         'rot_freq': int, 'h_fov': int, 'v_fov': int, 'vel_range': int,
-        'lower_fov': int, 'upper_fov': int, 'filter': str,
-        'cls': tuple
+        'lower_fov': int, 'upper_fov': int, 'view_dt': int
     }
     req_comm_keys = ['type', 'pos']
     db_key_type = {
-        'database_path': str, 'save_data': bool, 'sampling_time': int,
+        'database_path': str, 'save_data': bool, 'sampling_time': float,
         'Datastreams': tuple, 'samples': int
     }
     # Copy from sensor_lib.sensors.__init__.py
@@ -243,7 +243,7 @@ def config_setup(conf_path):
 
 if __name__ == '__main__':
     # Test config file
-    config_path = r"configs/config_example.conf"
+    config_path = r"configs/scenario_custom.conf"
 
     if config_setup(config_path):
         print(' # Configuration is valid.')

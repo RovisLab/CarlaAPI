@@ -92,7 +92,7 @@ class CarlaMain(object):
 
     def game_loop(self):
         # Prepare timestamp
-        ts_start = int(time.time())
+        ts_start = int(time.time_ns()/1000)
         ts_stop = ts_start
         frame_id = 0  # First frame
 
@@ -110,7 +110,7 @@ class CarlaMain(object):
 
                 # Advance
                 ts_start = ts_stop
-                ts_stop += self.dt
+                ts_stop += int(1000*self.dt)
                 frame_id += 1
 
     def save_data_timer(self):
@@ -292,7 +292,10 @@ class CarlaMain(object):
         print('')
         print(' # Termination started..')
         if conf.Database['save_data']:
-            print(' - Saved {} out of {} samples.'.format(self.data_count, conf.Database['samples']))
+            if conf.Database['samples'] == -1:
+                print(' - Saved {} samples.'.format(self.data_count))
+            else:
+                print(' - Saved {} out of {} samples.'.format(self.data_count, conf.Database['samples']))
 
         # Terminate population
         if conf.General['populate_sim']:
