@@ -72,7 +72,7 @@ class ImuSensor(BaseSensor):
         return None
 
     @staticmethod
-    def sensor_callback(weak_ref, data):
+    def sensor_callback(weak_ref, data, **kwargs):
         self = weak_ref()
         if self.capture:
             self.data = data

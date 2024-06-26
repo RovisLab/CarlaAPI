@@ -72,7 +72,7 @@ class DepthSensor(BaseSensor):
         return None
 
     @staticmethod
-    def sensor_callback(weak_ref, data):
+    def sensor_callback(weak_ref, data, **kwargs):
         self = weak_ref()
         if self.capture:
             self.data = data
@@ -107,7 +107,7 @@ class DepthSensor(BaseSensor):
 
         if rovis_raw is not None:
             images_data = '{\"ImagesDataRaw\":\"'
-            front_base = str(base64.b64encode(cv2.imencode(".jpg", raw)[1]))
+            front_base = str(base64.b64encode(cv2.imencode(".jpg", rovis_raw)[1]))
             front_base = front_base[2:len(front_base) - 1]
             images_data += "{}&\"".format(front_base)
             images_data += ', \"ImagesDataDepth\":\"\"'  # TODO remove

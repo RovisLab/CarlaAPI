@@ -58,7 +58,7 @@ class VehicleStateEstimation(BaseSensor):
         return [position[0], position[1], speed, heading, steering]
 
     @staticmethod
-    def sensor_callback(weak_ref, data):
+    def sensor_callback(weak_ref, data, **kwargs):
         pass
 
     # ==================== Viewer methods ====================

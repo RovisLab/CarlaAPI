@@ -1,6 +1,7 @@
 from sensor_lib.sensors.Camera import CameraSensor
 from sensor_lib.sensors.SemSeg import SemSegSensor
 from sensor_lib.sensors.Depth import DepthSensor
+from sensor_lib.sensors.RGBD import RGBDSensor
 from sensor_lib.sensors.Lidar import LidarSensor
 from sensor_lib.sensors.Radar import RadarSensor
 from sensor_lib.sensors.Imu import ImuSensor
@@ -17,6 +18,7 @@ __all__ = [
     'CameraSensor',
     'SemSegSensor',
     'DepthSensor',
+    'RGBDSensor',
     'LidarSensor',
     'RadarSensor',
     'ImuSensor',
@@ -32,6 +34,7 @@ sensor_types = {
     'camera': CameraSensor,
     'semseg': SemSegSensor,
     'depth': DepthSensor,
+    'rgbd': RGBDSensor,
     'lidar': LidarSensor,
     'radar': RadarSensor,
     'imu': ImuSensor,

@@ -455,6 +455,8 @@ class RovisDataBase:
             stream = RovisLaneStream(self.db_path, filter_id, filter_name, input_sources)
         elif filter_type in ['ROVIS_SEMANTIC_SEGMENTATION_FILTER_TYPE', 'sem_seg', 'semseg', 'semantic']:
             stream = RovisSemSegStream(self.db_path, filter_id, filter_name, input_sources)
+        elif filter_type in ['ROVIS_RGBDCAMERA_FILTER_TYPE', 'rgbd']:
+            stream = RovisRgbdStream(self.db_path, filter_id, filter_name)
         elif filter_type in ['ROVIS_ROTARY_ENCODER_FILTER_TYPE', 'wheels_encoder', 'wheels_enc', 'encoder']:
             stream = RovisWheelsEncoderStream(self.db_path, filter_id, filter_name)
         else:
@@ -1095,6 +1097,56 @@ class RovisSemSegStream(RovisDataBase.RovisStream):
                 row = [ts_stop, data['shape_id'][i], data['cls'][i],
                        data['instance'][i], data['points'][i]]
                 writer.writerow(row)
+
+
+class RovisRgbdStream(RovisDataBase.RovisStream):
+    def __init__(self, db_path, filter_id, filter_name, input_sources=()):
+        super().__init__(db_path, filter_id, filter_name, input_sources)
+        self.filter_type = RovisFilterType.ROVIS_RGBDCAMERA_FILTER_TYPE
+        self.output_type = RovisDataType.ROVIS_IMAGE
+
+    def create_stream(self):
+        # create dir and image folder
+        mkdir(self.dir)
+        mkdir(self.dir + '/samples')
+        mkdir(self.dir + '/samples/0')
+        mkdir(self.dir + '/samples/0/left')
+        mkdir(self.dir + '/samples/0/right')
+
+        # create csv file
+        with open(self.dir + '/data_descriptor.csv', 'w', newline='') as f:
+            writer = csv.writer(f)
+            header = ['timestamp_start', 'timestamp_stop', 'sampling_time', 'left_file_path_0', 'right_file_path_0']
+            writer.writerow(header)
+
+        self.created = True
+
+    def add_to_stream(self, ts_start, ts_stop, data):
+        """ rgbd
+            'name_rgb': !str,
+            'name_depth': !str,
+            'image_rgb': !array[][][] / str,
+            'image_depth': !array[][][] / str
+        """
+        # Save rgb image (left)
+        image_rgb_path = 'samples/0/left' + '/' + data['name_rgb']
+        if isinstance(data['image_rgb'], str):
+            copy(data['image_rgb'], self.dir + '/' + image_rgb_path)
+        else:
+            cv2.imwrite(self.dir + '/' + image_rgb_path, data['image_rgb'])
+
+        # Save depth image (right)
+        image_depth_path = 'samples/0/right' + '/' + data['name_depth']
+        if isinstance(data['image_depth'], str):
+            copy(data['image_depth'], self.dir + '/' + image_depth_path)
+        else:
+            cv2.imwrite(self.dir + '/' + image_depth_path, data['image_depth'])
+
+        # Update csv
+        with open(self.dir + '/data_descriptor.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            row = [ts_start, ts_stop, ts_stop - ts_start, image_rgb_path, image_depth_path]
+            writer.writerow(row)
 
 
 class RovisWheelsEncoderStream(RovisDataBase.RovisStream):

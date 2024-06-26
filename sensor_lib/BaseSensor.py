@@ -95,7 +95,7 @@ class BaseSensor(object):
 
     @staticmethod
     # Sensor callback for carla
-    def sensor_callback(weak_ref, data):
+    def sensor_callback(weak_ref, data, **kwargs):
         raise NotImplementedError
 
     # Terminate sensor

@@ -56,7 +56,7 @@ def check_config():
         'Datastreams': tuple, 'samples': int
     }
     # Copy from sensor_lib.sensors.__init__.py
-    sensor_types = ['camera', 'semseg', 'depth', 'lidar', 'radar', 'imu',
+    sensor_types = ['camera', 'semseg', 'depth', 'rgbd', 'lidar', 'radar', 'imu',
                     'gnss', 'oflow', 'det2d', 'det3d', 'veh_state', 'actuator']
 
     # Check General keys

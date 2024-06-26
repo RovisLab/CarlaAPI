@@ -64,7 +64,7 @@ class Bbox2DSensor(BaseSensor):
         return bboxes  # bboxes - [[x_min, y_min, x_max, y_max, cls], ...]
 
     @staticmethod
-    def sensor_callback(weak_ref, data):
+    def sensor_callback(weak_ref, data, **kwargs):
         pass
 
     # ==================== Viewer methods ====================
